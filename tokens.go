@@ -19,22 +19,16 @@ type TokenType int
 const (
 	// ErrorToken An error occurred.
 	ErrorToken TokenType = iota
-
 	// EOFToken At end of input.
 	EOFToken
-
 	// PlusToken Addition as in '+'.
 	PlusToken
-
 	// MinusToken Subtraction as in '-'.
 	MinusToken
-
 	// MultiplyToken Multiplication as in '*'.
 	MultiplyToken
-
 	// DivisionToken Division as in '/'/
 	DivisionToken
-
 	// NumberToken A numeral value like 23.
 	NumberToken
 )
