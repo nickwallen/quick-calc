@@ -56,7 +56,9 @@ func (tok *Tokenizer) emit(tokenType TokenType) {
 	case EOFToken:
 		token = EOFToken.Of("")
 	default:
-		token = tokenType.Of(tok.current())
+		// remove leading, trailing, and embedded whitespace
+		value := strings.ReplaceAll(tok.current(), " ", "")
+		token = tokenType.Of(value)
 	}
 	tok.tokens <- token
 	tok.start = tok.pos

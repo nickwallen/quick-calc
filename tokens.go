@@ -67,7 +67,8 @@ func expectNumber(tok *Tokenizer) stateFn {
 	tok.ignoreWhitespaces()
 
 	// optional sign
-	// tok.accept("+-")
+	tok.accept("+-")
+	tok.acceptRun(" ")
 
 	// accept hex or base-10
 	digits := "0123456789"

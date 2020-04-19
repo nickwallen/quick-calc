@@ -14,6 +14,22 @@ func TestDecimals(t *testing.T) {
 	}
 }
 
+func TestPositiveDecimals(t *testing.T) {
+	expected := []Token{NumberToken.Of("+22"), EOFToken.Of("")}
+	inputs := []string{"+22", "  +22", "+22    ", "+  22"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestNegativeDecimals(t *testing.T) {
+	expected := []Token{NumberToken.Of("-22"), EOFToken.Of("")}
+	inputs := []string{"-22", "  -22", "-22    ", "  - 22"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
 func TestBadDecimal(t *testing.T) {
 	expected := []Token{ErrorToken.Of("expected number, but got \"2A\"")}
 	inputs := []string{"2A", "   2A", "2A   "}
@@ -62,9 +78,25 @@ func TestPlus(t *testing.T) {
 	}
 }
 
-func TestManyPlus(t *testing.T) {
-	expected := []Token{NumberToken.Of("2"), PlusToken.Of("+"), ErrorToken.Of("expected number, but got \"+\"")}
-	inputs := []string{"2 ++ 2", "   2++2", "   2++   2   ", "2++2"}
+func TestPlusNegatives(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), PlusToken.Of("+"), NumberToken.Of("-2"), EOFToken.Of("")}
+	inputs := []string{"2 + -2", "   2+-2", "   2 +   -2   ", "2+-2"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestPlusPositives(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), PlusToken.Of("+"), NumberToken.Of("+2"), EOFToken.Of("")}
+	inputs := []string{"2 + +2", "   2++2", "   2 +   +2   ", "2++2"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestTooManyPlus(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), PlusToken.Of("+"), ErrorToken.Of("expected number, but got \"++\"")}
+	inputs := []string{"2 +++ 2", "   2+++2", "   2+++   2   ", "2+++2"}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
 	}
@@ -78,9 +110,25 @@ func TestMinus(t *testing.T) {
 	}
 }
 
-func TestManyMinus(t *testing.T) {
-	expected := []Token{NumberToken.Of("2"), MinusToken.Of("-"), ErrorToken.Of("expected number, but got \"-\"")}
-	inputs := []string{"2 -- 2", "   2--2", "   2 --   2   ", "2--2"}
+func TestMinusNegatives(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), MinusToken.Of("-"), NumberToken.Of("-2"), EOFToken.Of("")}
+	inputs := []string{"2 - -2", "   2--2", "   2 -   -2   ", "2--2"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestMinusPositives(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), MinusToken.Of("-"), NumberToken.Of("+2"), EOFToken.Of("")}
+	inputs := []string{"2 - +2", "   2-+2", "   2 -   +2   ", "2-+2"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestTooManyMinus(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), MinusToken.Of("-"), ErrorToken.Of("expected number, but got \"--\"")}
+	inputs := []string{"2 --- 2", "   2---2", "   2 ---   2   ", "2---2"}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
 	}
