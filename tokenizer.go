@@ -53,12 +53,12 @@ func (tok *Tokenizer) current() string {
 func (tok *Tokenizer) emit(tokenType TokenType) {
 	var token Token
 	switch tokenType {
-	case EOFToken:
-		token = EOFToken.Of("")
+	case EOF:
+		token = EOF.Token("")
 	default:
 		// remove leading, trailing, and embedded whitespace
 		value := strings.ReplaceAll(tok.current(), " ", "")
-		token = tokenType.Of(value)
+		token = tokenType.Token(value)
 	}
 	tok.tokens <- token
 	tok.start = tok.pos
@@ -134,7 +134,7 @@ func (tok *Tokenizer) run() {
 }
 
 func (tok *Tokenizer) errorf(format string, args ...interface{}) stateFn {
-	tok.tokens <- Token{typ: ErrorToken, val: fmt.Sprintf(format, args...)}
+	tok.tokens <- Token{typ: Error, val: fmt.Sprintf(format, args...)}
 	// stop the tokenizer
 	return nil
 }

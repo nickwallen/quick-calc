@@ -17,36 +17,36 @@ type Token struct {
 type TokenType int
 
 const (
-	// ErrorToken An error occurred.
-	ErrorToken TokenType = iota
-	// EOFToken At end of input.
-	EOFToken
-	// PlusToken Addition as in '+'.
-	PlusToken
-	// MinusToken Subtraction as in '-'.
-	MinusToken
-	// MultiplyToken Multiplication as in '*'.
-	MultiplyToken
-	// DivisionToken Division as in '/'/
-	DivisionToken
-	// NumberToken A numeral value like 23.
-	NumberToken
+	// Error An error occurred.
+	Error TokenType = iota
+	// EOF At end of input.
+	EOF
+	// Plus Addition as in '+'.
+	Plus
+	// Minus Subtraction as in '-'.
+	Minus
+	// Multiply Multiplication as in '*'.
+	Multiply
+	// Divide Division as in '/'/
+	Divide
+	// Number A numeral value like 23.
+	Number
 )
 
-// Of Returns a new Token of this type.
-func (t TokenType) Of(value string) Token {
+// Token Returns a new Token of this type.
+func (t TokenType) Token(value string) Token {
 	return Token{typ: t, val: value}
 }
 
 func (t Token) String() string {
 	switch t.typ {
-	case ErrorToken:
+	case Error:
 		return fmt.Sprintf("ERR[%s]", t.val)
-	case EOFToken:
+	case EOF:
 		return "EOF"
-	case NumberToken:
+	case Number:
 		return fmt.Sprintf("NUM[%s]", t.val)
-	case PlusToken, MinusToken:
+	case Plus, Minus, Multiply, Divide:
 		return fmt.Sprintf("SYM[%s]", t.val)
 	default:
 		return fmt.Sprintf("TOK[%s]", t.val)
@@ -94,7 +94,7 @@ func expectNumber(tok *Tokenizer) stateFn {
 	}
 
 	// we have the number
-	tok.emit(NumberToken)
+	tok.emit(Number)
 
 	// what is next?
 	switch tok.peek() {
@@ -109,7 +109,7 @@ func expectEOF(tok *Tokenizer) stateFn {
 	tok.ignoreWhitespaces()
 	tok.ignoreRun('\n')
 	if tok.next() == -1 {
-		tok.emit(EOFToken)
+		tok.emit(EOF)
 		return nil
 	}
 	return tok.errorf("expected EOF, but got '%s'", tok.current())
@@ -119,16 +119,16 @@ func expectSymbol(tok *Tokenizer) stateFn {
 	for {
 		switch next := tok.next(); {
 		case next == '+':
-			tok.emit(PlusToken)
+			tok.emit(Plus)
 			return expectNumber
 		case next == '-':
-			tok.emit(MinusToken)
+			tok.emit(Minus)
 			return expectNumber
 		case next == '*':
-			tok.emit(MultiplyToken)
+			tok.emit(Multiply)
 			return expectNumber
 		case next == '/':
-			tok.emit(DivisionToken)
+			tok.emit(Divide)
 			return expectNumber
 		case unicode.IsSpace(next):
 			tok.ignore()
