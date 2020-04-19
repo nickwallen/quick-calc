@@ -31,7 +31,7 @@ func TestNegativeDecimals(t *testing.T) {
 }
 
 func TestBadDecimal(t *testing.T) {
-	expected := []Token{ErrorToken.Of("expected number, but got \"2A\"")}
+	expected := []Token{ErrorToken.Of("expected number, but got '2A'")}
 	inputs := []string{"2A", "   2A", "2A   "}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
@@ -47,7 +47,7 @@ func TestHexaDecimal(t *testing.T) {
 }
 
 func TestBadHexaDecimal(t *testing.T) {
-	expected := []Token{ErrorToken.Of("expected number, but got \"0xG\"")}
+	expected := []Token{ErrorToken.Of("expected number, but got '0xG'")}
 	inputs := []string{"0xG2", "   0xG2", "0xG2   "}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
@@ -95,7 +95,7 @@ func TestPlusPositives(t *testing.T) {
 }
 
 func TestTooManyPlus(t *testing.T) {
-	expected := []Token{NumberToken.Of("2"), PlusToken.Of("+"), ErrorToken.Of("expected number, but got \"++\"")}
+	expected := []Token{NumberToken.Of("2"), PlusToken.Of("+"), ErrorToken.Of("expected number, but got '++'")}
 	inputs := []string{"2 +++ 2", "   2+++2", "   2+++   2   ", "2+++2"}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
@@ -127,7 +127,7 @@ func TestMinusPositives(t *testing.T) {
 }
 
 func TestTooManyMinus(t *testing.T) {
-	expected := []Token{NumberToken.Of("2"), MinusToken.Of("-"), ErrorToken.Of("expected number, but got \"--\"")}
+	expected := []Token{NumberToken.Of("2"), MinusToken.Of("-"), ErrorToken.Of("expected number, but got '--'")}
 	inputs := []string{"2 --- 2", "   2---2", "   2 ---   2   ", "2---2"}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
@@ -143,7 +143,7 @@ func TestMultiply(t *testing.T) {
 }
 
 func TestManyMultiplies(t *testing.T) {
-	expected := []Token{NumberToken.Of("2"), MultiplyToken.Of("*"), ErrorToken.Of("expected number, but got \"*\"")}
+	expected := []Token{NumberToken.Of("2"), MultiplyToken.Of("*"), ErrorToken.Of("expected number, but got '*'")}
 	inputs := []string{"2 ** 2", "   2**2", "   2 **   2   ", "2**2"}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
@@ -159,7 +159,7 @@ func TestDivide(t *testing.T) {
 }
 
 func TestManyDivides(t *testing.T) {
-	expected := []Token{NumberToken.Of("2"), DivisionToken.Of("/"), ErrorToken.Of("expected number, but got \"/\"")}
+	expected := []Token{NumberToken.Of("2"), DivisionToken.Of("/"), ErrorToken.Of("expected number, but got '/'")}
 	inputs := []string{"2 // 2", "   2//2", "   2 //   2   ", "2//2"}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())

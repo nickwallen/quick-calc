@@ -73,7 +73,7 @@ func expectNumber(tok *Tokenizer) stateFn {
 	// at least one digit is required
 	if strings.IndexRune(digits+"xX", tok.peek()) < 0 {
 		tok.next()
-		return tok.errorf("expected number, but got %q", tok.current())
+		return tok.errorf("expected number, but got '%s'", tok.current())
 	}
 	tok.acceptRun(digits)
 
@@ -90,7 +90,7 @@ func expectNumber(tok *Tokenizer) stateFn {
 
 	if unicode.IsLetter(tok.peek()) || unicode.IsNumber(tok.peek()) {
 		tok.next()
-		return tok.errorf("expected number, but got %q", tok.current())
+		return tok.errorf("expected number, but got '%s'", tok.current())
 	}
 
 	// we have the number
@@ -112,7 +112,7 @@ func expectEOF(tok *Tokenizer) stateFn {
 		tok.emit(EOFToken)
 		return nil
 	}
-	return tok.errorf("expected EOF: %q", tok.current())
+	return tok.errorf("expected EOF, but got '%s'", tok.current())
 }
 
 func expectSymbol(tok *Tokenizer) stateFn {
@@ -136,7 +136,7 @@ func expectSymbol(tok *Tokenizer) stateFn {
 			tok.backup()
 			return expectEOF
 		default:
-			return tok.errorf("expected symbol, but got '%q'", tok.current())
+			return tok.errorf("expected symbol, but got '%s'", tok.current())
 		}
 	}
 }
