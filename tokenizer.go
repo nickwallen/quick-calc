@@ -77,7 +77,7 @@ func (tok *Tokenizer) ignoreRun(ignore rune) {
 }
 
 // skips over any whitespace
-func (tok *Tokenizer) ignoreWhitespaces() {
+func (tok *Tokenizer) ignoreSpaceRun() {
 	for unicode.IsSpace(tok.next()) {
 		tok.ignore()
 	}
@@ -126,6 +126,16 @@ func (tok *Tokenizer) acceptRun(valid string) (count int) {
 	return count
 }
 
+// acceptLetterRun consumes a run of alphabetic characters
+func (tok *Tokenizer) acceptLetterRun() (count int) {
+	for unicode.IsLetter(tok.next()) {
+		// keep consuming runes
+		count++
+	}
+	tok.backup()
+	return count
+}
+
 // run lexes the input by executing state functions until the state is nil
 func (tok *Tokenizer) run() {
 	startState := tok.state
@@ -135,7 +145,7 @@ func (tok *Tokenizer) run() {
 	close(tok.tokens)
 }
 
-func (tok *Tokenizer) errorf(format string, args ...interface{}) stateFn {
+func (tok *Tokenizer) error(format string, args ...interface{}) stateFn {
 	tok.tokens <- Token{typ: Error, val: fmt.Sprintf(format, args...)}
 	// stop the tokenizer
 	return nil

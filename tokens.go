@@ -30,6 +30,8 @@ const (
 	Divide
 	// Number A numeral value like 23.
 	Number
+	// Units The units of measure like 'kg' or 'pounds'.
+	Units
 )
 
 // Token Returns a new Token of this type.
@@ -57,7 +59,7 @@ func (t TokenType) String() string {
 }
 
 func expectNumber(tok *Tokenizer) stateFn {
-	tok.ignoreWhitespaces()
+	tok.ignoreSpaceRun()
 
 	// optional sign
 	tok.accept("+-")
@@ -77,18 +79,18 @@ func expectNumber(tok *Tokenizer) stateFn {
 	// avoid leading commas
 	if tok.accept(",") {
 		tok.next()
-		return tok.errorf("expected number, but got '%s'", tok.current())
+		return tok.error("expected number, but got '%s'", tok.current())
 	}
 
 	// accept a run of digits
 	count := tok.acceptRun(digits)
 
 	// validate that we have valid digits
-	invalidHex := !decimal && count == 0
-	invalidDec := decimal && !leadZero && count == 0
+	invalidHex := !decimal && count <= 0
+	invalidDec := decimal && !leadZero && count <= 0
 	if invalidDec || invalidHex {
 		tok.next()
-		return tok.errorf("expected number, but got '%s'", tok.current())
+		return tok.error("expected number, but got '%s'", tok.current())
 	}
 
 	// floating point number
@@ -102,31 +104,30 @@ func expectNumber(tok *Tokenizer) stateFn {
 		tok.acceptRun("0123456789")
 	}
 
-	if unicode.IsLetter(tok.peek()) || unicode.IsNumber(tok.peek()) {
-		tok.next()
-		return tok.errorf("expected number, but got '%s'", tok.current())
-	}
-
 	// we have the number
 	tok.emit(Number)
 
 	// what is next?
-	switch tok.peek() {
-	case -1, '\n':
+	tok.ignoreSpaceRun()
+	next := tok.peek()
+	switch {
+	case next == -1, next == '\n':
 		return expectEOF
+	case unicode.IsLetter(next):
+		return expectUnits
 	default:
 		return expectSymbol
 	}
 }
 
 func expectEOF(tok *Tokenizer) stateFn {
-	tok.ignoreWhitespaces()
+	tok.ignoreSpaceRun()
 	tok.ignoreRun('\n')
 	if tok.next() == -1 {
 		tok.emit(EOF)
 		return nil
 	}
-	return tok.errorf("expected EOF, but got '%s'", tok.current())
+	return tok.error("expected EOF, but got '%s'", tok.current())
 }
 
 func expectSymbol(tok *Tokenizer) stateFn {
@@ -150,7 +151,17 @@ func expectSymbol(tok *Tokenizer) stateFn {
 			tok.backup()
 			return expectEOF
 		default:
-			return tok.errorf("expected symbol, but got '%s'", tok.current())
+			return tok.error("expected symbol, but got '%s'", tok.current())
 		}
 	}
+}
+
+func expectUnits(tok *Tokenizer) stateFn {
+	count := tok.acceptLetterRun()
+	if count <= 0 {
+		tok.next()
+		return tok.error("expected units, but got '%s'", tok.current())
+	}
+	tok.emit(Units)
+	return expectSymbol
 }

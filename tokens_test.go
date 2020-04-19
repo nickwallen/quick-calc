@@ -60,8 +60,8 @@ func TestNegativeDecimals(t *testing.T) {
 }
 
 func TestBadDecimal(t *testing.T) {
-	expected := []Token{Error.Token("expected number, but got '2A'")}
-	inputs := []string{"2A", "   2A", "2A   "}
+	expected := []Token{Number.Token("2"), Error.Token("expected symbol, but got '?'")}
+	inputs := []string{"2?", "   2?", "2?   "}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
 	}
@@ -198,6 +198,23 @@ func TestDivide(t *testing.T) {
 func TestManyDivides(t *testing.T) {
 	expected := []Token{Number.Token("2"), Divide.Token("/"), Error.Token("expected number, but got '/'")}
 	inputs := []string{"2 // 2", "   2//2", "   2 //   2   ", "2//2"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestUnits(t *testing.T) {
+	expected := []Token{Number.Token("245"), Units.Token("pounds"), EOF.Token("")}
+	inputs := []string{"245 pounds", "    245 pounds", "245pounds"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestExpression(t *testing.T) {
+	expected := []Token{Number.Token("245"), Units.Token("pounds"), Plus.Token("+"),
+		Number.Token("37.50"), Units.Token("kg"), EOF.Token("")}
+	inputs := []string{"245 pounds + 37.50kg"}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
 	}
