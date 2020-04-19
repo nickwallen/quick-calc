@@ -47,15 +47,15 @@ func (t TokenType) Of(value string) Token {
 func (t Token) String() string {
 	switch t.typ {
 	case ErrorToken:
-		return fmt.Sprintf("ERR(%s)", t.val)
+		return fmt.Sprintf("ERR[%s]", t.val)
 	case EOFToken:
 		return "EOF"
 	case NumberToken:
-		return fmt.Sprintf("NUM(%q)", t.val)
+		return fmt.Sprintf("NUM[%s]", t.val)
 	case PlusToken, MinusToken:
-		return fmt.Sprintf("SYM(%q)", t.val)
+		return fmt.Sprintf("SYM[%s]", t.val)
 	default:
-		return fmt.Sprintf("TOK(%q)", t.val)
+		return fmt.Sprintf("TOK[%s]", t.val)
 	}
 }
 
