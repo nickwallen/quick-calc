@@ -25,7 +25,7 @@ func New(input string) *Tokenizer {
 	tok := &Tokenizer{
 		state:  expectNumber,
 		input:  input,
-		tokens: make(chan Token),
+		tokens: make(chan Token, 2),
 	}
 	go tok.run()
 	return tok
@@ -33,13 +33,9 @@ func New(input string) *Tokenizer {
 
 // NextToken fetch the next token.
 func (tok *Tokenizer) NextToken() Token {
-	for {
-		select {
-		case token := <-tok.tokens:
-			return token
-		default:
-			tok.state = tok.state(tok)
-		}
+	select {
+	case token := <-tok.tokens:
+		return token
 	}
 }
 
