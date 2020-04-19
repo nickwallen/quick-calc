@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"io"
+	"os"
 
 	"github.com/nickwallen/toks"
 )
