@@ -29,6 +29,12 @@ const (
 	// MinusToken Subtraction as in '-'.
 	MinusToken
 
+	// MultiplyToken Multiplication as in '*'.
+	MultiplyToken
+
+	// DivisionToken Division as in '/'/
+	DivisionToken
+
 	// NumberToken A numeral value like 23.
 	NumberToken
 )
@@ -122,6 +128,12 @@ func expectSymbol(tok *Tokenizer) stateFn {
 			return expectNumber
 		case next == '-':
 			tok.emit(MinusToken)
+			return expectNumber
+		case next == '*':
+			tok.emit(MultiplyToken)
+			return expectNumber
+		case next == '/':
+			tok.emit(DivisionToken)
 			return expectNumber
 		case unicode.IsSpace(next):
 			tok.ignore()

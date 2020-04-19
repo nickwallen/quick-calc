@@ -86,6 +86,38 @@ func TestManyMinus(t *testing.T) {
 	}
 }
 
+func TestMultiply(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), MultiplyToken.Of("*"), NumberToken.Of("2"), EOFToken.Of("")}
+	inputs := []string{"2 * 2", "   2*2", "   2 *   2   ", "2*2"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestManyMultiplies(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), MultiplyToken.Of("*"), ErrorToken.Of("expected number, but got \"*\"")}
+	inputs := []string{"2 ** 2", "   2**2", "   2 **   2   ", "2**2"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestDivide(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), DivisionToken.Of("/"), NumberToken.Of("2"), EOFToken.Of("")}
+	inputs := []string{"2 / 2", "   2/2", "   2 /   2   ", "2/2"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestManyDivides(t *testing.T) {
+	expected := []Token{NumberToken.Of("2"), DivisionToken.Of("/"), ErrorToken.Of("expected number, but got \"/\"")}
+	inputs := []string{"2 // 2", "   2//2", "   2 //   2   ", "2//2"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
 func expect(t *testing.T, expected []Token, tokens chan Token) {
 	// pul the actual tokens off the channel
 	actuals := make([]Token, 0)
