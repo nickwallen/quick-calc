@@ -3,7 +3,6 @@ package toks
 import (
 	"fmt"
 	"reflect"
-	"strings"
 	"unicode"
 )
 
@@ -64,18 +63,33 @@ func expectNumber(tok *Tokenizer) stateFn {
 	tok.accept("+-")
 	tok.acceptRun(" ")
 
-	// accept hex or base-10
-	digits := "0123456789"
-	if tok.accept("0") && tok.accept("xX") {
+	// expect decimal values
+	digits := "0123456789,"
+	decimal := true
+
+	leadZero := tok.accept("0")
+	if leadZero && tok.accept("xX") {
+		// expect hexadecimal values
 		digits = "0123456789ABCDEF"
+		decimal = false
 	}
 
-	// at least one digit is required
-	if strings.IndexRune(digits+"xX", tok.peek()) < 0 {
+	// avoid leading commas
+	if tok.accept(",") {
 		tok.next()
 		return tok.errorf("expected number, but got '%s'", tok.current())
 	}
-	tok.acceptRun(digits)
+
+	// accept a run of digits
+	count := tok.acceptRun(digits)
+
+	// validate that we have valid digits
+	invalidHex := !decimal && count == 0
+	invalidDec := decimal && !leadZero && count == 0
+	if invalidDec || invalidHex {
+		tok.next()
+		return tok.errorf("expected number, but got '%s'", tok.current())
+	}
 
 	// floating point number
 	if tok.accept(".") {

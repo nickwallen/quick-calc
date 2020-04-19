@@ -46,7 +46,9 @@ func (tok *Tokenizer) Tokens() chan Token {
 
 // returns what is currently being scanned
 func (tok *Tokenizer) current() string {
-	return tok.input[tok.start:tok.pos]
+	// remove leading, trailing, and embedded whitespace
+	value := tok.input[tok.start:tok.pos]
+	return strings.ReplaceAll(value, " ", "")
 }
 
 // emits a token to be consumed by the client
@@ -56,9 +58,7 @@ func (tok *Tokenizer) emit(tokenType TokenType) {
 	case EOF:
 		token = EOF.Token("")
 	default:
-		// remove leading, trailing, and embedded whitespace
-		value := strings.ReplaceAll(tok.current(), " ", "")
-		token = tokenType.Token(value)
+		token = tokenType.Token(tok.current())
 	}
 	tok.tokens <- token
 	tok.start = tok.pos
@@ -117,16 +117,18 @@ func (tok *Tokenizer) accept(valid string) bool {
 }
 
 // acceptRun consumes a run of strings
-func (tok *Tokenizer) acceptRun(valid string) {
+func (tok *Tokenizer) acceptRun(valid string) (count int) {
 	for strings.IndexRune(valid, tok.next()) >= 0 {
 		// keep consuming runes
+		count++
 	}
 	tok.backup()
+	return count
 }
 
 // run lexes the input by executing state functions until the state is nil
 func (tok *Tokenizer) run() {
-	startState := expectNumber
+	startState := tok.state
 	for state := startState; state != nil; {
 		state = state(tok)
 	}

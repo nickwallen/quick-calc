@@ -6,12 +6,41 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestEmpty(t *testing.T) {
+	expected := []Token{Error.Token("expected number, but got ''")}
+	inputs := []string{"", "  "}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
 func TestDecimals(t *testing.T) {
 	expected := []Token{Number.Token("22"), EOF.Token("")}
 	inputs := []string{"22", "  22", "22    "}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
 	}
+}
+
+func TestZeros(t *testing.T) {
+	expected := []Token{Number.Token("0"), EOF.Token("")}
+	inputs := []string{"0", "  0", "0    "}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestCommas(t *testing.T) {
+	expected := []Token{Number.Token("2,200,123"), EOF.Token("")}
+	inputs := []string{"2,200,123", "  2,200,123", "2,200,123    "}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestLeadComma(t *testing.T) {
+	input := ",200,200"
+	expect(t, []Token{Error.Token("expected number, but got ',2'")}, New(input).Tokens())
 }
 
 func TestPositiveDecimals(t *testing.T) {
@@ -49,6 +78,14 @@ func TestHexaDecimal(t *testing.T) {
 func TestBadHexaDecimal(t *testing.T) {
 	expected := []Token{Error.Token("expected number, but got '0xG'")}
 	inputs := []string{"0xG2", "   0xG2", "0xG2   "}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestNoHexaDecimal(t *testing.T) {
+	expected := []Token{Error.Token("expected number, but got '0x'")}
+	inputs := []string{"0x", "   0x", "0x   "}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
 	}
