@@ -28,6 +28,8 @@ const (
 	Multiply
 	// Divide Division as in '/'/
 	Divide
+	// In A symbol for conversions; 23 lbs in kg.
+	In
 	// Number A numeral value like 23.
 	Number
 	// Units The units of measure like 'kg' or 'pounds'.
@@ -49,6 +51,8 @@ func (t Token) String() string {
 		return fmt.Sprintf("NUM[%s]", t.val)
 	case Plus, Minus, Multiply, Divide:
 		return fmt.Sprintf("SYM[%s]", t.val)
+	case Units:
+		return fmt.Sprintf("UNI[%s]", t.val)
 	default:
 		return fmt.Sprintf("TOK[%s]", t.val)
 	}
@@ -157,11 +161,36 @@ func expectSymbol(tok *Tokenizer) stateFn {
 }
 
 func expectUnits(tok *Tokenizer) stateFn {
+	tok.ignoreSpaceRun()
 	count := tok.acceptLetterRun()
 	if count <= 0 {
 		tok.next()
 		return tok.error("expected units, but got '%s'", tok.current())
 	}
 	tok.emit(Units)
-	return expectSymbol
+
+	// what is next?
+	tok.ignoreSpaceRun()
+	switch {
+	case tok.accept("iI") && tok.accept("nN") && tok.accept(" "):
+		tok.backup()
+		tok.backup()
+		tok.backup()
+		return expectIn
+	case unicode.IsLetter(tok.peek()):
+		return expectUnits
+	default:
+		return expectSymbol
+	}
+}
+
+func expectIn(tok *Tokenizer) stateFn {
+	tok.ignoreSpaceRun()
+	if tok.accept("iI") && tok.accept("nN") && tok.accept(" ") {
+		tok.emit(In)
+		return expectUnits
+	}
+	// error
+	tok.next()
+	return tok.error("expected 'in' keyword, but got '%s'", tok.current())
 }

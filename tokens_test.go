@@ -211,10 +211,48 @@ func TestUnits(t *testing.T) {
 	}
 }
 
-func TestExpression(t *testing.T) {
-	expected := []Token{Number.Token("245"), Units.Token("pounds"), Plus.Token("+"),
-		Number.Token("37.50"), Units.Token("kg"), EOF.Token("")}
-	inputs := []string{"245 pounds + 37.50kg"}
+func TestAddUnits(t *testing.T) {
+	expected := []Token{
+		Number.Token("245"),
+		Units.Token("pounds"),
+		Plus.Token("+"),
+		Number.Token("37.50"),
+		Units.Token("kg"),
+		EOF.Token("")}
+	inputs := []string{"245 pounds + 37.50kg", "245   pounds   + 37.50   kg"}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestConversion(t *testing.T) {
+	expected := []Token{Number.Token("20"), Units.Token("lbs"), In.Token("in"),
+		Units.Token("kg"), EOF.Token("")}
+	inputs := []string{"20 lbs in kg", "   20lbs in   kg   "}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestUnitsStartWithIn(t *testing.T) {
+	expected := []Token{Number.Token("20"), Units.Token("ints"), EOF.Token("")}
+	inputs := []string{"20 ints", "   20ints   "}
+	for _, input := range inputs {
+		expect(t, expected, New(input).Tokens())
+	}
+}
+
+func TestAddThenConvert(t *testing.T) {
+	expected := []Token{
+		Number.Token("245"),
+		Units.Token("pounds"),
+		Plus.Token("+"),
+		Number.Token("37.50"),
+		Units.Token("kg"),
+		In.Token("in"),
+		Units.Token("kilos"),
+		EOF.Token("")}
+	inputs := []string{"245 pounds + 37.50 kg in kilos"}
 	for _, input := range inputs {
 		expect(t, expected, New(input).Tokens())
 	}
