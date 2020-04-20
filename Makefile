@@ -5,7 +5,7 @@ test:
 	.githooks/pre-commit
 
 run-tokenizer:
-	go run cmd/toks-shell/main.go
+	go run cmd/calc-cli/main.go tokens
 
 run:
 	go run cmd/calc-cli/main.go

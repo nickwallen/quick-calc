@@ -6,9 +6,14 @@ import (
 	"testing"
 )
 
-func TestSum(t *testing.T) {
-	reader := bytes.NewBufferString("23 kg + 23 kg")
+func TestCalculate(t *testing.T) {
 	writer := bytes.NewBufferString("")
-	calculate(reader, writer)
-	assert.Equal(t, "\n > 46.00 kg \n", writer.String())
+	calculate("23 kg + 23 kg", writer)
+	assert.Equal(t, "46.00 kg \n", writer.String())
+}
+
+func TestTokenize(t *testing.T) {
+	writer := bytes.NewBufferString("")
+	tokenize("2 + 2", writer)
+	assert.Equal(t, "NUM[2]  SYM[+]  NUM[2]  EOF  ", writer.String())
 }
