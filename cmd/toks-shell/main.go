@@ -14,7 +14,7 @@ func tokenize(stdin io.Reader, writer io.Writer) {
 	fmt.Fprintf(writer, "\n > ")
 	input, _ := reader.ReadString('\n')
 
-	tok := toks.New(input)
+	tok := toks.NewTokenizer(input)
 	for token := range tok.Tokens() {
 		fmt.Fprintf(writer, "%v  ", token)
 	}

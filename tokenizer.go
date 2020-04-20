@@ -7,6 +7,10 @@ import (
 	"unicode/utf8"
 )
 
+const (
+	eofRune = rune(0)
+)
+
 // Tokenizer A tokenizer performs lexical analysis on an input string.
 type Tokenizer struct {
 	state  stateFn    // the current state function
@@ -20,8 +24,8 @@ type Tokenizer struct {
 // the state of the scanner as a function that returns the next state.
 type stateFn func(*Tokenizer) stateFn
 
-// New Creates a tokenizer that can tokenize a string.
-func New(input string) *Tokenizer {
+// NewTokenizer Creates a tokenizer that can tokenize a string.
+func NewTokenizer(input string) *Tokenizer {
 	tok := &Tokenizer{
 		state:  expectNumber,
 		input:  input,
@@ -99,7 +103,7 @@ func (tok *Tokenizer) peek() rune {
 func (tok *Tokenizer) next() rune {
 	if tok.pos >= len(tok.input) {
 		tok.width = 0
-		return -1 // eof
+		return eofRune
 	}
 	var r rune
 	r, tok.width = utf8.DecodeRuneInString(tok.input[tok.pos:])
@@ -146,7 +150,7 @@ func (tok *Tokenizer) run() {
 }
 
 func (tok *Tokenizer) error(format string, args ...interface{}) stateFn {
-	tok.tokens <- Token{typ: Error, val: fmt.Sprintf(format, args...)}
+	tok.tokens <- Token{TokenType: Error, Value: fmt.Sprintf(format, args...)}
 	// stop the tokenizer
 	return nil
 }

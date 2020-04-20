@@ -8,8 +8,8 @@ import (
 
 // Token a tokenizer emits tokens.
 type Token struct {
-	typ TokenType // the type like numberToken
-	val string    // the value, like "46.2"
+	TokenType TokenType // the type like numberToken
+	Value     string    // the value, like "46.2"
 }
 
 // TokenType the type of an emitted token
@@ -38,23 +38,23 @@ const (
 
 // Token Returns a new Token of this type.
 func (t TokenType) Token(value string) Token {
-	return Token{typ: t, val: value}
+	return Token{TokenType: t, Value: value}
 }
 
 func (t Token) String() string {
-	switch t.typ {
+	switch t.TokenType {
 	case Error:
-		return fmt.Sprintf("ERR[%s]", t.val)
+		return fmt.Sprintf("ERR[%s]", t.Value)
 	case EOF:
 		return "EOF"
 	case Number:
-		return fmt.Sprintf("NUM[%s]", t.val)
+		return fmt.Sprintf("NUM[%s]", t.Value)
 	case Plus, Minus, Multiply, Divide:
-		return fmt.Sprintf("SYM[%s]", t.val)
+		return fmt.Sprintf("SYM[%s]", t.Value)
 	case Units:
-		return fmt.Sprintf("UNI[%s]", t.val)
+		return fmt.Sprintf("UNI[%s]", t.Value)
 	default:
-		return fmt.Sprintf("TOK[%s]", t.val)
+		return fmt.Sprintf("TOK[%s]", t.Value)
 	}
 }
 
@@ -115,7 +115,7 @@ func expectNumber(tok *Tokenizer) stateFn {
 	tok.ignoreSpaceRun()
 	next := tok.peek()
 	switch {
-	case next == -1, next == '\n':
+	case next == eofRune, next == '\n':
 		return expectEOF
 	case unicode.IsLetter(next):
 		return expectUnits
@@ -127,7 +127,7 @@ func expectNumber(tok *Tokenizer) stateFn {
 func expectEOF(tok *Tokenizer) stateFn {
 	tok.ignoreSpaceRun()
 	tok.ignoreRun('\n')
-	if tok.next() == -1 {
+	if tok.next() == eofRune {
 		tok.emit(EOF)
 		return nil
 	}
@@ -151,7 +151,7 @@ func expectSymbol(tok *Tokenizer) stateFn {
 			return expectNumber
 		case unicode.IsSpace(next):
 			tok.ignore()
-		case next == -1:
+		case next == eofRune:
 			tok.backup()
 			return expectEOF
 		default:
