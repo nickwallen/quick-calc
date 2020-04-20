@@ -2,7 +2,6 @@ package toks
 
 import (
 	"fmt"
-	"reflect"
 	"unicode"
 )
 
@@ -36,6 +35,31 @@ const (
 	Units
 )
 
+func (t TokenType) String() string {
+	switch t {
+	case Error:
+		return "error"
+	case EOF:
+		return "end-of-line"
+	case Plus:
+		return "addition, '+'"
+	case Minus:
+		return "subtraction, '-'"
+	case Multiply:
+		return "multiplication, '*'"
+	case Divide:
+		return "division, '/'"
+	case In:
+		return "keyword 'in'"
+	case Number:
+		return "number, like 23"
+	case Units:
+		return "units, like kilograms"
+	default:
+		return "unknown"
+	}
+}
+
 // Token Returns a new Token of this type.
 func (t TokenType) Token(value string) Token {
 	return Token{TokenType: t, Value: value}
@@ -56,10 +80,6 @@ func (t Token) String() string {
 	default:
 		return fmt.Sprintf("TOK[%s]", t.Value)
 	}
-}
-
-func (t TokenType) String() string {
-	return fmt.Sprintf("%s", reflect.TypeOf(t))
 }
 
 func expectNumber(tok *Tokenizer) stateFn {

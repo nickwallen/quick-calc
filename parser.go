@@ -1,6 +1,7 @@
 package toks
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -17,40 +18,61 @@ func NewParser(input string) *Parser {
 }
 
 // Parse Parse the input text and return an expression
-func (parser *Parser) Parse() Expression {
-	amount1 := parser.expectAmount()
+func (parser *Parser) Parse() (Expression, error) {
+	var expression Expression
+	amount1, err := parser.expectAmount()
+	if err != nil {
+		return expression, err
+	}
 
 	token := <-parser.tokenizer.Tokens()
 	if token.TokenType != EOF {
 
 		// expect an operation
 		if token.TokenType == Plus {
-			amount2 := parser.expectAmount()
-			return Sum{left: amount1, right: amount2, units: amount1.Units}
+			amount2, err := parser.expectAmount()
+			if err != nil {
+				return expression, err
+			}
+			return SumOf(amount1, amount2, amount1.Units), nil
 		}
+	} else {
+		expression = amount1
 	}
 
-	return amount1
+	return expression, nil
 }
 
-func (parser *Parser) expectAmount() Amount {
-	token := <-parser.tokenizer.Tokens()
-	if token.TokenType != Number {
-		// TODO do something
+func (parser *Parser) expectAmount() (Amount, error) {
+	var amount Amount
+
+	token, err := parser.nextToken(Number)
+	if err != nil {
+		return amount, err
 	}
 
 	// TODO where to handle hexadecimal vs decimal?
 	number, err := strconv.ParseInt(token.Value, 10, 64)
 	if err != nil {
-		// TODO error do something
+		return amount, err
 	}
 
-	units := <-parser.tokenizer.Tokens()
-	if units.TokenType != Units {
-		// TODO error do something
+	units, err := parser.nextToken(Units)
+	if err != nil {
+		return amount, err
 	}
-	// TODO validate the units
 
-	expression := Amount{Value: number, Units: AmountUnits{units: units.Value}}
-	return expression
+	expression := AmountOf(number, UnitsOf(units.Value))
+	return expression, nil
+}
+
+func (parser *Parser) nextToken(expected TokenType) (Token, error) {
+	token := <-parser.tokenizer.Tokens()
+	if token.TokenType == Error {
+		return token, fmt.Errorf(token.Value)
+	}
+	if expected != token.TokenType {
+		return token, fmt.Errorf("expected %s, but got %s", expected, token.TokenType)
+	}
+	return token, nil
 }

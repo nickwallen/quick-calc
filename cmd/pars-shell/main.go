@@ -13,14 +13,22 @@ func parse(stdin io.Reader, writer io.Writer) {
 	fmt.Fprintf(writer, "\n > ")
 	input, _ := reader.ReadString('\n')
 
-	expr := toks.NewParser(input).Parse()
-	amount, err := expr.Evaluate()
-	if err == nil {
-		fmt.Fprintf(writer, "%d %s \n", amount.Value, amount.Units)
-	} else {
-		fmt.Fprintf(writer, "Error: %s \n", err.Error())
+	// parse the input
+	expr, err := toks.NewParser(input).Parse()
+	if err != nil {
+		fmt.Fprintf(writer, "parse error: %s \n", err.Error())
+		return
 	}
 
+	// evaluate the expression
+	amount, err := expr.Evaluate()
+	if err != nil {
+		fmt.Fprintf(writer, "Error: %s \n", err.Error())
+		return
+	}
+
+	// output the result
+	fmt.Fprintf(writer, "%d %s \n", amount.Value, amount.Units)
 }
 
 func main() {
