@@ -21,6 +21,7 @@ func NewParser(input string) *Parser {
 func (parser *Parser) Parse() (Expression, error) {
 	var expression Expression
 	amount1, err := parser.expectAmount()
+	expression = amount1
 	if err != nil {
 		return expression, err
 	}
@@ -28,31 +29,39 @@ func (parser *Parser) Parse() (Expression, error) {
 	token := <-parser.tokenizer.Tokens()
 	if token.TokenType != EOF {
 
-		// expect an operation
-		if token.TokenType == Plus {
+		// expect an operand
+		switch token.TokenType {
+		case Plus:
 			amount2, err := parser.expectAmount()
 			if err != nil {
 				return expression, err
 			}
 			return SumOf(amount1, amount2, amount1.Units), nil
+		case Minus:
+			amount2, err := parser.expectAmount()
+			if err != nil {
+				return expression, err
+			}
+			return DiffOf(amount1, amount2, amount1.Units), nil
 		}
-	} else {
-		expression = amount1
 	}
-
-	return expression, nil
+	if token.TokenType == EOF {
+		// successfully parsed the entire string
+		return expression, nil
+	}
+	// error - we're done, but there are more tokens to parse.
+	return expression, fmt.Errorf("unsupported operation: %s", token.TokenType)
 }
 
 func (parser *Parser) expectAmount() (Amount, error) {
 	var amount Amount
-
 	token, err := parser.nextToken(Number)
 	if err != nil {
 		return amount, err
 	}
 
 	// TODO where to handle hexadecimal vs decimal?
-	number, err := strconv.ParseInt(token.Value, 10, 64)
+	number, err := strconv.ParseFloat(token.Value, 64)
 	if err != nil {
 		return amount, err
 	}
