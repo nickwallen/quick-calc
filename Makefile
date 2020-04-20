@@ -7,8 +7,8 @@ test:
 run-tokenizer:
 	go run cmd/toks-shell/main.go
 
-run-parser:
-	go run cmd/pars-shell/main.go
+run:
+	go run cmd/calc-cli/main.go
 
 clean:
 	go clean

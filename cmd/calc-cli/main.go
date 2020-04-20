@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func parse(stdin io.Reader, writer io.Writer) {
+func calculate(stdin io.Reader, writer io.Writer) {
 	reader := bufio.NewReader(stdin)
 	fmt.Fprintf(writer, "\n > ")
 	input, _ := reader.ReadString('\n')
@@ -26,6 +26,6 @@ func parse(stdin io.Reader, writer io.Writer) {
 
 func main() {
 	for {
-		parse(os.Stdin, os.Stdout)
+		calculate(os.Stdin, os.Stdout)
 	}
 }
