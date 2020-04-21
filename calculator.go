@@ -9,9 +9,10 @@ import (
 // Calculate Calculates the value of an input Expression.
 func Calculate(input string) (string, error) {
 	var result string
+	var tokens parser.TokenChannel
 
-	// the tokenizer runs in the background populating the tokens channel
-	tokens := make(chan tokenizer.Token, 2)
+	// the tokenizer runs in the background populating the token channel
+	tokens = make(chan tokenizer.Token, 2)
 	go tokenizer.Tokenize(input, tokens)
 
 	// parse the tokens

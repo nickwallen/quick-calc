@@ -24,7 +24,7 @@ type Tokenizer struct {
 // the state of the scanner as a function that returns the next state.
 type stateFn func(*Tokenizer) stateFn
 
-// Tokenize Tokenizes the input string and writes each Token to the output channel.
+// Tokenize Tokenize the input string and writes each Token to the output channel.
 func Tokenize(input string, output chan Token) {
 	tok := &Tokenizer{
 		state:  expectNumber,

@@ -9,32 +9,54 @@ import (
 // parser Parses input text and outputs an Expression.
 type parser struct {
 	// the channel from which tokens can be read
-	tokens chan tokenizer.Token
+	reader tokenReader
 }
 
-// Parse Parse a channel containing a series of tokens.
-func Parse(tokens chan tokenizer.Token) (Expression, error) {
+// the interface used by the parser to read tokens
+type tokenReader interface {
+	ReadToken() (tokenizer.Token, error)
+}
+
+// TokenChannel allows the Parser to read from a channel
+type TokenChannel chan tokenizer.Token
+
+// ReadToken Reads a Token from a channel.
+func (ch TokenChannel) ReadToken() (tokenizer.Token, error) {
+	var token tokenizer.Token
+	token, ok := <-ch
+	if !ok {
+		return token, fmt.Errorf("no more tokens; channel is closed")
+	}
+	return token, nil
+}
+
+// Parse Parses a series of tokens and returns an expression.
+func Parse(reader tokenReader) (Expression, error) {
 	var expression Expression
 
 	// an expression should start with an Amount like '23 pounds'
-	parser := &parser{tokens: tokens}
+	parser := &parser{reader: reader}
 	amount1, err := parser.expectAmount()
 	if err != nil {
 		return expression, err
 	}
 
+	token, err := reader.ReadToken()
+	if err != nil {
+		return expression, err
+	}
+
 	// the next token defines if this is an operation or a conversion
-	token := <-parser.tokens
 	switch token.TokenType {
 	case tokenizer.Plus, tokenizer.Minus, tokenizer.Multiply, tokenizer.Divide:
 		return parser.expectOperation(amount1, token.TokenType)
 	case tokenizer.In:
 		return parser.expectConversion(amount1)
 	case tokenizer.EOF:
-		// all tokens have been consumed
+		// all tokens have been consumed, all we have is the first amount
 		return amount1, nil
 	default:
-		// something bad happened because tokens remain that we not parsed
+		// something bad happened because tokens remain that were not parsed
 		return expression, fmt.Errorf("parsing error on input '%s'", token.Value)
 	}
 }
@@ -68,8 +90,12 @@ func (parser *parser) expectOperation(amount1 Amount, operator tokenizer.TokenTy
 		return expression, err
 	}
 
-	// what Units should the result be in?
-	token := <-parser.tokens
+	token, err := parser.reader.ReadToken()
+	if err != nil {
+		return expression, err
+	}
+
+	// what units should the result be in?
 	switch token.TokenType {
 	case tokenizer.EOF:
 		// success; default to Units of the first operand for expressions like '2 kg + 2 g'
@@ -127,11 +153,19 @@ func (parser *parser) expectUnits() (units Units, err error) {
 	return units, nil
 }
 
-func (parser *parser) nextToken(expected tokenizer.TokenType) (tokenizer.Token, error) {
-	token := <-parser.tokens
+func (parser *parser) nextToken(expected tokenizer.TokenType) (token tokenizer.Token, err error) {
+	// get the next token
+	token, err = parser.reader.ReadToken()
+	if err != nil {
+		return token, err
+	}
+
+	// if the tokenizer raises an error, its an error
 	if token.TokenType == tokenizer.Error {
 		return token, fmt.Errorf(token.Value)
 	}
+
+	// if the token is not the right type, its an error
 	if expected != token.TokenType {
 		value := fmt.Sprintf("got '%s'", token.Value)
 		if token.TokenType == tokenizer.EOF {
