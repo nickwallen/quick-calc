@@ -5,7 +5,7 @@ import (
 	"unicode"
 )
 
-// Token a Tokenizer emits tokens.
+// Token a tokenizer emits tokens.
 type Token struct {
 	TokenType TokenType // the type like numberToken
 	Value     string    // the value, like "46.2"
@@ -82,7 +82,7 @@ func (t Token) String() string {
 	}
 }
 
-func expectNumber(tok *Tokenizer) stateFn {
+func expectNumber(tok *tokenizer) stateFn {
 	tok.ignoreSpaceRun()
 
 	// optional sign
@@ -144,7 +144,7 @@ func expectNumber(tok *Tokenizer) stateFn {
 	}
 }
 
-func expectEOF(tok *Tokenizer) stateFn {
+func expectEOF(tok *tokenizer) stateFn {
 	tok.ignoreSpaceRun()
 	tok.ignoreRun('\n')
 	if tok.next() == eofRune {
@@ -154,7 +154,7 @@ func expectEOF(tok *Tokenizer) stateFn {
 	return tok.error("expected EOF, but got '%s'", tok.current())
 }
 
-func expectSymbol(tok *Tokenizer) stateFn {
+func expectSymbol(tok *tokenizer) stateFn {
 	for {
 		switch next := tok.next(); {
 		case next == '+':
@@ -180,7 +180,7 @@ func expectSymbol(tok *Tokenizer) stateFn {
 	}
 }
 
-func expectUnits(tok *Tokenizer) stateFn {
+func expectUnits(tok *tokenizer) stateFn {
 	tok.ignoreSpaceRun()
 	count := tok.acceptLetterRun()
 	if count <= 0 {
@@ -204,7 +204,7 @@ func expectUnits(tok *Tokenizer) stateFn {
 	}
 }
 
-func expectIn(tok *Tokenizer) stateFn {
+func expectIn(tok *tokenizer) stateFn {
 	tok.ignoreSpaceRun()
 	if tok.accept("iI") && tok.accept("nN") && tok.accept(" ") {
 		tok.emit(In)

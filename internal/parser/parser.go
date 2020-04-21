@@ -6,6 +6,7 @@ import (
 	"strconv"
 )
 
+// TODO no longer need to have this type; just pass around a tokenReader
 // parser Parses input text and outputs an Expression.
 type parser struct {
 	// the channel from which tokens can be read
@@ -15,19 +16,6 @@ type parser struct {
 // the interface used by the parser to read tokens
 type tokenReader interface {
 	ReadToken() (tokenizer.Token, error)
-}
-
-// TokenChannel allows the Parser to read from a channel
-type TokenChannel chan tokenizer.Token
-
-// ReadToken Reads a Token from a channel.
-func (ch TokenChannel) ReadToken() (tokenizer.Token, error) {
-	var token tokenizer.Token
-	token, ok := <-ch
-	if !ok {
-		return token, fmt.Errorf("no more tokens; channel is closed")
-	}
-	return token, nil
 }
 
 // Parse Parses a series of tokens and returns an expression.
@@ -50,11 +38,14 @@ func Parse(reader tokenReader) (Expression, error) {
 	switch token.TokenType {
 	case tokenizer.Plus, tokenizer.Minus, tokenizer.Multiply, tokenizer.Divide:
 		return parser.expectOperation(amount1, token.TokenType)
+
 	case tokenizer.In:
 		return parser.expectConversion(amount1)
+
 	case tokenizer.EOF:
 		// all tokens have been consumed, all we have is the first amount
 		return amount1, nil
+
 	default:
 		// something bad happened because tokens remain that were not parsed
 		return expression, fmt.Errorf("parsing error on input '%s'", token.Value)

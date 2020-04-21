@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/nickwallen/toks/internal/parser"
 	"github.com/nickwallen/toks/internal/tokenizer"
+	"github.com/nickwallen/toks/internal/util"
 )
 
 // Calculate Calculates the value of an input Expression.
 func Calculate(input string) (string, error) {
 	var result string
-	var tokens parser.TokenChannel
+	var tokens util.TokenChannel
 
 	// the tokenizer runs in the background populating the token channel
 	tokens = make(chan tokenizer.Token, 2)

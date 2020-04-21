@@ -11,52 +11,44 @@ const (
 	eofRune = rune(0)
 )
 
-// Tokenizer A Tokenizer performs lexical analysis on an input string.
-type Tokenizer struct {
-	state  stateFn    // the current state function
-	input  string     // the string to scan
-	start  int        // start position for this item
-	pos    int        // current position in the input
-	width  int        // width of the last rune read
-	tokens chan Token // the channel where items are emitted
+// tokenizer A tokenizer performs lexical analysis on an input string.
+type tokenizer struct {
+	state  stateFn     // the current state function
+	input  string      // the string to scan
+	start  int         // start position for this item
+	pos    int         // current position in the input
+	width  int         // width of the last rune read
+	writer tokenWriter // allows the tokenizer to write tokens that it finds
 }
 
 // the state of the scanner as a function that returns the next state.
-type stateFn func(*Tokenizer) stateFn
+type stateFn func(*tokenizer) stateFn
+
+// the interface used by the tokenizer to write tokens.
+type tokenWriter interface {
+	WriteToken(token Token) error
+	Close()
+}
 
 // Tokenize Tokenize the input string and writes each Token to the output channel.
-func Tokenize(input string, output chan Token) {
-	tok := &Tokenizer{
-		state:  expectNumber,
+func Tokenize(input string, writer tokenWriter) {
+	tok := &tokenizer{
+		state:  expectNumber, // at the start, expect a number
 		input:  input,
-		tokens: output,
+		writer: writer,
 	}
 	tok.run()
 }
 
-// TokenizeToSlice Tokenizes the input string and returns each Token as a slice.
-func TokenizeToSlice(input string) []Token {
-	// tokenize in a separate goroutine
-	output := make(chan Token)
-	go Tokenize(input, output)
-
-	// fetch the tokens into a slice
-	tokens := make([]Token, 0)
-	for token := range output {
-		tokens = append(tokens, token) // TODO probably a more efficient way to do this
-	}
-	return tokens
-}
-
 // returns what is currently being scanned
-func (tok *Tokenizer) current() string {
+func (tok *tokenizer) current() string {
 	// remove leading, trailing, and embedded whitespace
 	value := tok.input[tok.start:tok.pos]
 	return strings.ReplaceAll(value, " ", "")
 }
 
 // emits a Token to be consumed by the client
-func (tok *Tokenizer) emit(tokenType TokenType) {
+func (tok *tokenizer) emit(tokenType TokenType) {
 	var token Token
 	switch tokenType {
 	case EOF:
@@ -64,24 +56,24 @@ func (tok *Tokenizer) emit(tokenType TokenType) {
 	default:
 		token = tokenType.Token(tok.current())
 	}
-	tok.tokens <- token
+	tok.writer.WriteToken(token)
 	tok.start = tok.pos
 }
 
 // skips over the pending input
-func (tok *Tokenizer) ignore() {
+func (tok *tokenizer) ignore() {
 	tok.start = tok.pos
 }
 
 // skips over a run of values
-func (tok *Tokenizer) ignoreRun(ignore rune) {
+func (tok *tokenizer) ignoreRun(ignore rune) {
 	for tok.next() == ignore {
 		tok.ignore()
 	}
 }
 
 // skips over any whitespace
-func (tok *Tokenizer) ignoreSpaceRun() {
+func (tok *tokenizer) ignoreSpaceRun() {
 	for unicode.IsSpace(tok.next()) {
 		tok.ignore()
 	}
@@ -89,18 +81,18 @@ func (tok *Tokenizer) ignoreSpaceRun() {
 }
 
 // steps back one
-func (tok *Tokenizer) backup() {
+func (tok *tokenizer) backup() {
 	tok.pos -= tok.width
 }
 
 // peek returns, but does not consume the next rune in the input.
-func (tok *Tokenizer) peek() rune {
+func (tok *tokenizer) peek() rune {
 	rune := tok.next()
 	tok.backup()
 	return rune
 }
 
-func (tok *Tokenizer) next() rune {
+func (tok *tokenizer) next() rune {
 	if tok.pos >= len(tok.input) {
 		tok.width = 0
 		return eofRune
@@ -112,7 +104,7 @@ func (tok *Tokenizer) next() rune {
 }
 
 // accept consumes the next rune if it is valid.
-func (tok *Tokenizer) accept(valid string) bool {
+func (tok *tokenizer) accept(valid string) bool {
 	if strings.IndexRune(valid, tok.next()) >= 0 {
 		return true
 	}
@@ -121,7 +113,7 @@ func (tok *Tokenizer) accept(valid string) bool {
 }
 
 // acceptRun consumes a run of strings
-func (tok *Tokenizer) acceptRun(valid string) (count int) {
+func (tok *tokenizer) acceptRun(valid string) (count int) {
 	for strings.IndexRune(valid, tok.next()) >= 0 {
 		// keep consuming runes
 		count++
@@ -131,7 +123,7 @@ func (tok *Tokenizer) acceptRun(valid string) (count int) {
 }
 
 // acceptLetterRun consumes a run of alphabetic characters
-func (tok *Tokenizer) acceptLetterRun() (count int) {
+func (tok *tokenizer) acceptLetterRun() (count int) {
 	for unicode.IsLetter(tok.next()) {
 		// keep consuming runes
 		count++
@@ -141,16 +133,17 @@ func (tok *Tokenizer) acceptLetterRun() (count int) {
 }
 
 // run lexes the input by executing state functions until the state is nil
-func (tok *Tokenizer) run() {
+func (tok *tokenizer) run() {
 	startState := tok.state
 	for state := startState; state != nil; {
 		state = state(tok)
 	}
-	close(tok.tokens)
+	tok.writer.Close()
 }
 
-func (tok *Tokenizer) error(format string, args ...interface{}) stateFn {
-	tok.tokens <- Token{TokenType: Error, Value: fmt.Sprintf(format, args...)}
-	// stop the Tokenizer
+func (tok *tokenizer) error(format string, args ...interface{}) stateFn {
+	token := Token{TokenType: Error, Value: fmt.Sprintf(format, args...)}
+	tok.writer.WriteToken(token)
+	// stop the tokenizer
 	return nil
 }

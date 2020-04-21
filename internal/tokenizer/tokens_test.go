@@ -1,6 +1,7 @@
 package tokenizer
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -105,19 +106,41 @@ var testCases = map[string][]Token{
 	"245 lbs + 37.50 kg in kg": {Number.Token("245"), Units.Token("lbs"), Plus.Token("+"), Number.Token("37.50"), Units.Token("kg"), In.Token("in"), Units.Token("kg"), EOF.Token("")},
 }
 
-func TestTokens(t *testing.T) {
-	for input, expected := range testCases {
-		output := make(chan Token, 2)
-		go Tokenize(input, output)
-		expect(t, expected, output)
-	}
+type tokenSlice struct {
+	slice    []Token
+	position int
 }
 
-func expect(t *testing.T, expected []Token, tokens chan Token) {
-	// pul the actual tokens off the channel
-	actuals := make([]Token, 0)
-	for token := range tokens {
-		actuals = append(actuals, token)
+// allows the tests to read tokens from a slice
+func (t *tokenSlice) ReadToken() (Token, error) {
+	var token Token
+	if t.position >= len(t.slice) {
+		return token, fmt.Errorf("no tokens left")
 	}
-	assert.ElementsMatch(t, expected, actuals)
+	token = t.slice[t.position]
+	t.position++
+	return token, nil
+}
+
+func (t *tokenSlice) WriteToken(token Token) error {
+	if t.position >= len(t.slice) {
+		return fmt.Errorf("no space left")
+	}
+	t.slice[t.position] = token
+	t.position++
+	return nil
+}
+
+func (t *tokenSlice) Close() {
+	// nothing to do
+}
+
+func TestTokens(t *testing.T) {
+	for input, expected := range testCases {
+		slice := make([]Token, len(expected))
+		output := tokenSlice{slice: slice, position: 0}
+
+		Tokenize(input, &output)
+		assert.ElementsMatch(t, expected, slice)
+	}
 }
