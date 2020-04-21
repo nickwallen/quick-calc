@@ -16,3 +16,15 @@ func TestTokenize(t *testing.T) {
 	assert.Equal(t, Units.token("pounds"), <-output)
 	assert.Equal(t, EOF.token(""), <-output)
 }
+
+func TestTokenizeToSlice(t *testing.T) {
+	actual := TokenizeToSlice("2 grams + 2 pounds")
+	expected := []Token{
+		Number.token("2"),
+		Units.token("grams"),
+		Plus.token("+"),
+		Number.token("2"),
+		Units.token("pounds"),
+		EOF.token("")}
+	assert.ElementsMatch(t, expected, actual)
+}

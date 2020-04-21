@@ -8,8 +8,12 @@ import (
 func Calculate(input string) (string, error) {
 	var result string
 
+	// the tokenizer runs in the background populating the tokens channel
+	tokens := make(chan Token, 2)
+	go Tokenize(input, tokens)
+
 	// parse the input
-	expr, err := Parse(input)
+	expr, err := Parse(tokens)
 	if err != nil {
 		return result, fmt.Errorf("parse error: %s", err.Error())
 	}

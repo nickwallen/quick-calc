@@ -42,19 +42,19 @@ func (t TokenType) String() string {
 	case EOF:
 		return "end-of-line"
 	case Plus:
-		return "addition, '+'"
+		return "addition (+)"
 	case Minus:
-		return "subtraction, '-'"
+		return "minus (-)"
 	case Multiply:
-		return "multiplication, '*'"
+		return "multiply (*)"
 	case Divide:
-		return "division, '/'"
+		return "division (/)"
 	case In:
 		return "keyword 'in'"
 	case Number:
-		return "number, like 23"
+		return "number"
 	case Units:
-		return "units, like kilograms"
+		return "units"
 	default:
 		return "unknown"
 	}

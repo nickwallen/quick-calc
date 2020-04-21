@@ -24,7 +24,7 @@ type Tokenizer struct {
 // the state of the scanner as a function that returns the next state.
 type stateFn func(*Tokenizer) stateFn
 
-// Tokenize Creates a tokenizer that can tokenize an input string. The tokens are sent to an output channel.
+// Tokenize Tokenizes the input string and writes each token to the output channel.
 func Tokenize(input string, output chan Token) {
 	tok := &Tokenizer{
 		state:  expectNumber,
@@ -32,6 +32,20 @@ func Tokenize(input string, output chan Token) {
 		tokens: output,
 	}
 	tok.run()
+}
+
+// TokenizeToSlice Tokenizes the input string and returns each token as a slice.
+func TokenizeToSlice(input string) []Token {
+	// tokenize in a separate goroutine
+	output := make(chan Token)
+	go Tokenize(input, output)
+
+	// fetch the tokens into a slice
+	tokens := make([]Token, 0)
+	for token := range output {
+		tokens = append(tokens, token) // TODO probably a more efficient way to do this
+	}
+	return tokens
 }
 
 // returns what is currently being scanned

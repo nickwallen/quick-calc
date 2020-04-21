@@ -11,13 +11,9 @@ type parser struct {
 	tokens chan Token
 }
 
-// Parse Parse the input text and return an Expression
-func Parse(input string) (Expression, error) {
+// Parse Parse a channel containing a series of tokens.
+func Parse(tokens chan Token) (Expression, error) {
 	var expression Expression
-
-	// the tokenizer runs in the background populating the tokens channel
-	tokens := make(chan Token, 2)
-	go Tokenize(input, tokens)
 
 	// an expression should start with an amount like '23 pounds'
 	parser := &parser{tokens: tokens}
@@ -136,7 +132,11 @@ func (parser *parser) nextToken(expected TokenType) (Token, error) {
 		return token, fmt.Errorf(token.Value)
 	}
 	if expected != token.TokenType {
-		return token, fmt.Errorf("expected %s, but got %s", expected, token.TokenType)
+		value := fmt.Sprintf("got '%s'", token.Value)
+		if token.TokenType == EOF {
+			value = "reached end of input"
+		}
+		return token, fmt.Errorf("expected %s, but %s", expected, value)
 	}
 	return token, nil
 }
