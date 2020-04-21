@@ -5,27 +5,29 @@ import (
 	"strconv"
 )
 
-// Parser Parses input text and outputs an Expression.
-type Parser struct {
-	tokenizer   *Tokenizer
-	expressions chan Expression
-}
-
-// NewParser Creates a new Parser.
-func NewParser(input string) *Parser {
-	parser := &Parser{tokenizer: NewTokenizer(input)}
-	return parser
+// parser Parses input text and outputs an Expression.
+type parser struct {
+	// the channel from which tokens can be read
+	tokens chan Token
 }
 
 // Parse Parse the input text and return an Expression
-func (parser *Parser) Parse() (Expression, error) {
+func Parse(input string) (Expression, error) {
 	var expression Expression
+
+	// the tokenizer runs in the background populating the tokens channel
+	tokens := make(chan Token, 2)
+	go Tokenize(input, tokens)
+
+	// an expression should start with an amount like '23 pounds'
+	parser := &parser{tokens: tokens}
 	amount1, err := parser.expectAmount()
 	if err != nil {
 		return expression, err
 	}
 
-	token := <-parser.tokenizer.Tokens()
+	// the next token defines if this is an operation or a conversion
+	token := <-parser.tokens
 	switch token.TokenType {
 	case Plus, Minus, Multiply, Divide:
 		return parser.expectOperation(amount1, token.TokenType)
@@ -35,12 +37,12 @@ func (parser *Parser) Parse() (Expression, error) {
 		// all tokens have been consumed
 		return amount1, nil
 	default:
-		// tokens remain, something bad happened
-		return expression, fmt.Errorf("parsing error on unexpected input '%s'", token.Value)
+		// something bad happened because tokens remain that we not parsed
+		return expression, fmt.Errorf("parsing error on input '%s'", token.Value)
 	}
 }
 
-func (parser *Parser) expectConversion(amount1 amount) (Expression, error) {
+func (parser *parser) expectConversion(amount1 amount) (Expression, error) {
 	var expression Expression
 
 	// expect the units to convert to
@@ -59,7 +61,7 @@ func (parser *Parser) expectConversion(amount1 amount) (Expression, error) {
 	return unitConverterOf(amount1, units), nil
 }
 
-func (parser *Parser) expectOperation(amount1 amount, operator TokenType) (Expression, error) {
+func (parser *parser) expectOperation(amount1 amount, operator TokenType) (Expression, error) {
 	// to this point, we've already seen... operand1 +
 	var expression Expression
 
@@ -70,7 +72,7 @@ func (parser *Parser) expectOperation(amount1 amount, operator TokenType) (Expre
 	}
 
 	// what units should the result be in?
-	token := <-parser.tokenizer.Tokens()
+	token := <-parser.tokens
 	switch token.TokenType {
 	case EOF:
 		// success; default to units of the first operand for expressions like '2 kg + 2 g'
@@ -97,7 +99,7 @@ func (parser *Parser) expectOperation(amount1 amount, operator TokenType) (Expre
 	}
 }
 
-func (parser *Parser) expectAmount() (amount, error) {
+func (parser *parser) expectAmount() (amount, error) {
 	var amount amount
 	token, err := parser.nextToken(Number)
 	if err != nil {
@@ -116,7 +118,7 @@ func (parser *Parser) expectAmount() (amount, error) {
 	return expression, nil
 }
 
-func (parser *Parser) expectUnits() (units amountUnits, err error) {
+func (parser *parser) expectUnits() (units amountUnits, err error) {
 	token, err := parser.nextToken(Units)
 	if err != nil {
 		return units, err
@@ -128,8 +130,8 @@ func (parser *Parser) expectUnits() (units amountUnits, err error) {
 	return units, nil
 }
 
-func (parser *Parser) nextToken(expected TokenType) (Token, error) {
-	token := <-parser.tokenizer.Tokens()
+func (parser *parser) nextToken(expected TokenType) (Token, error) {
+	token := <-parser.tokens
 	if token.TokenType == Error {
 		return token, fmt.Errorf(token.Value)
 	}

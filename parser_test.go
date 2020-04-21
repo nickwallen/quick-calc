@@ -6,7 +6,7 @@ import (
 )
 
 func TestParseAmount(t *testing.T) {
-	actual, err := NewParser("23 pounds").Parse()
+	actual, err := Parse("23 pounds")
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
@@ -15,17 +15,17 @@ func TestParseAmount(t *testing.T) {
 }
 
 func TestParseAmountNoUnits(t *testing.T) {
-	_, err := NewParser("23 ").Parse()
+	_, err := Parse("23")
 	assert.Equal(t, "expected units, like kilograms, but got end-of-line", err.Error())
 }
 
 func TestParseAmountNoNumber(t *testing.T) {
-	_, err := NewParser(" pounds ").Parse()
+	_, err := Parse(" pounds ")
 	assert.Equal(t, "expected number, but got 'p'", err.Error())
 }
 
 func TestParseSum(t *testing.T) {
-	actual, err := NewParser("23 kg + 23 pounds").Parse()
+	actual, err := Parse("23 kg + 23 pounds")
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
@@ -34,7 +34,7 @@ func TestParseSum(t *testing.T) {
 }
 
 func TestParseSubtract(t *testing.T) {
-	actual, err := NewParser("23 kg - 23 pounds").Parse()
+	actual, err := Parse("23 kg - 23 pounds")
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
@@ -43,7 +43,7 @@ func TestParseSubtract(t *testing.T) {
 }
 
 func TestParseConversion(t *testing.T) {
-	actual, err := NewParser("2 pounds in ounces").Parse()
+	actual, err := Parse("2 pounds in ounces")
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
@@ -52,7 +52,7 @@ func TestParseConversion(t *testing.T) {
 }
 
 func TestParseSumAndConvert(t *testing.T) {
-	actual, err := NewParser("2 ounces + 2 pounds in pounds").Parse()
+	actual, err := Parse("2 ounces + 2 pounds in pounds")
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
@@ -61,7 +61,7 @@ func TestParseSumAndConvert(t *testing.T) {
 }
 
 func TestParseSubtractAndConvert(t *testing.T) {
-	actual, err := NewParser("2 pounds - 2 ounces in ounces").Parse()
+	actual, err := Parse("2 pounds - 2 ounces in ounces")
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}

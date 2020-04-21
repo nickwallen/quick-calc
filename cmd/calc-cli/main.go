@@ -13,8 +13,9 @@ const (
 )
 
 func tokenize(input string, writer io.Writer) {
-	tok := toks.NewTokenizer(input)
-	for token := range tok.Tokens() {
+	output := make(chan toks.Token, 2)
+	go toks.Tokenize(input, output)
+	for token := range output {
 		fmt.Fprintf(writer, "%v  ", token)
 	}
 }

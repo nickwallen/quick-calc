@@ -6,18 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNextToken(t *testing.T) {
-	tok := NewTokenizer("2 + 2")
-	assert.Equal(t, Number.token("2"), tok.NextToken())
-	assert.Equal(t, Plus.token("+"), tok.NextToken())
-	assert.Equal(t, Number.token("2"), tok.NextToken())
-	assert.Equal(t, EOF.token(""), tok.NextToken())
-}
-
-func TestTokens(t *testing.T) {
-	tok := NewTokenizer("2 + 2")
-	assert.Equal(t, Number.token("2"), <-tok.Tokens())
-	assert.Equal(t, Plus.token("+"), <-tok.Tokens())
-	assert.Equal(t, Number.token("2"), <-tok.Tokens())
-	assert.Equal(t, EOF.token(""), <-tok.Tokens())
+func TestTokenize(t *testing.T) {
+	output := make(chan Token, 2)
+	go Tokenize("2 grams + 2 pounds", output)
+	assert.Equal(t, Number.token("2"), <-output)
+	assert.Equal(t, Units.token("grams"), <-output)
+	assert.Equal(t, Plus.token("+"), <-output)
+	assert.Equal(t, Number.token("2"), <-output)
+	assert.Equal(t, Units.token("pounds"), <-output)
+	assert.Equal(t, EOF.token(""), <-output)
 }

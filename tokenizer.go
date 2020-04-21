@@ -24,28 +24,14 @@ type Tokenizer struct {
 // the state of the scanner as a function that returns the next state.
 type stateFn func(*Tokenizer) stateFn
 
-// NewTokenizer Creates a Tokenizer that can tokenize a string.
-func NewTokenizer(input string) *Tokenizer {
+// Tokenize Creates a tokenizer that can tokenize an input string. The tokens are sent to an output channel.
+func Tokenize(input string, output chan Token) {
 	tok := &Tokenizer{
 		state:  expectNumber,
 		input:  input,
-		tokens: make(chan Token, 2),
+		tokens: output,
 	}
-	go tok.run()
-	return tok
-}
-
-// NextToken fetch the next Token.
-func (tok *Tokenizer) NextToken() Token {
-	select {
-	case token := <-tok.tokens:
-		return token
-	}
-}
-
-// Tokens returns a channel that will be filled with tokens.
-func (tok *Tokenizer) Tokens() chan Token {
-	return tok.tokens
+	tok.run()
 }
 
 // returns what is currently being scanned

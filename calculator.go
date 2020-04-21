@@ -8,13 +8,13 @@ import (
 func Calculate(input string) (string, error) {
 	var result string
 
-	// Parse the input
-	expr, err := NewParser(input).Parse()
+	// parse the input
+	expr, err := Parse(input)
 	if err != nil {
-		return result, fmt.Errorf("Parse error: %s", err.Error())
+		return result, fmt.Errorf("parse error: %s", err.Error())
 	}
 
-	// Evaluate the Expression
+	// evaluate the expression
 	amount, err := expr.Evaluate()
 	if err != nil {
 		return result, fmt.Errorf("execution error: %s", err.Error())
