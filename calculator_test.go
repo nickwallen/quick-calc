@@ -1,11 +1,12 @@
-package toks
+package toks_test
 
 import (
+	"github.com/nickwallen/toks"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-var testCases = map[string]string{
+var expressions = map[string]string{
 	"2 oz":                                "2.00 ounces",
 	"45 lbs":                              "45.00 pounds",
 	"2 kg + 2000g":                        "4.00 kilograms",
@@ -18,12 +19,25 @@ var testCases = map[string]string{
 	"2 meters - 2 feet in feet":           "4.56 feet",
 	"2kg + 34g in grams":                  "2034.00 grams",
 	"2 miles + 2 meters in feet":          "10566.56 feet",
+	"12 years in days":                    "4383.00 days",
 }
 
 func TestCalculator(t *testing.T) {
-	for expression, expected := range testCases {
-		actual, err := Calculate(expression)
+	for expression, expected := range expressions {
+		actual, err := toks.Calculate(expression)
 		assert.Equal(t, expected, actual)
 		assert.Nil(t, err)
+	}
+}
+
+var badExpressions = []string{
+	"2 miles + 3 pounds",
+	"32 googles",
+}
+
+func TestBadExpressions(t *testing.T) {
+	for _, expression := range badExpressions {
+		_, err := toks.Calculate(expression)
+		assert.NotNil(t, err)
 	}
 }

@@ -11,7 +11,7 @@ const (
 	eofRune = rune(0)
 )
 
-// Tokenizer A tokenizer performs lexical analysis on an input string.
+// Tokenizer A Tokenizer performs lexical analysis on an input string.
 type Tokenizer struct {
 	state  stateFn    // the current state function
 	input  string     // the string to scan
@@ -24,7 +24,7 @@ type Tokenizer struct {
 // the state of the scanner as a function that returns the next state.
 type stateFn func(*Tokenizer) stateFn
 
-// NewTokenizer Creates a tokenizer that can tokenize a string.
+// NewTokenizer Creates a Tokenizer that can tokenize a string.
 func NewTokenizer(input string) *Tokenizer {
 	tok := &Tokenizer{
 		state:  expectNumber,
@@ -35,7 +35,7 @@ func NewTokenizer(input string) *Tokenizer {
 	return tok
 }
 
-// NextToken fetch the next token.
+// NextToken fetch the next Token.
 func (tok *Tokenizer) NextToken() Token {
 	select {
 	case token := <-tok.tokens:
@@ -55,14 +55,14 @@ func (tok *Tokenizer) current() string {
 	return strings.ReplaceAll(value, " ", "")
 }
 
-// emits a token to be consumed by the client
+// emits a Token to be consumed by the client
 func (tok *Tokenizer) emit(tokenType TokenType) {
 	var token Token
 	switch tokenType {
 	case EOF:
-		token = EOF.Token("")
+		token = EOF.token("")
 	default:
-		token = tokenType.Token(tok.current())
+		token = tokenType.token(tok.current())
 	}
 	tok.tokens <- token
 	tok.start = tok.pos
@@ -151,6 +151,6 @@ func (tok *Tokenizer) run() {
 
 func (tok *Tokenizer) error(format string, args ...interface{}) stateFn {
 	tok.tokens <- Token{TokenType: Error, Value: fmt.Sprintf(format, args...)}
-	// stop the tokenizer
+	// stop the Tokenizer
 	return nil
 }

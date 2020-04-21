@@ -5,43 +5,43 @@ import (
 	"testing"
 )
 
-func pounds() (pounds AmountUnits) {
-	pounds, _ = UnitsOf("pounds")
+func pounds() (pounds amountUnits) {
+	pounds, _ = unitsOf("pounds")
 	return pounds
 }
 
-func kilos() (kilos AmountUnits) {
-	kilos, _ = UnitsOf("kilograms")
+func kilos() (kilos amountUnits) {
+	kilos, _ = unitsOf("kilograms")
 	return kilos
 }
 
-func grams() (grams AmountUnits) {
-	grams, _ = UnitsOf("grams")
+func grams() (grams amountUnits) {
+	grams, _ = unitsOf("grams")
 	return grams
 }
 
-func ounces() (ounces AmountUnits) {
-	ounces, _ = UnitsOf("ounces")
+func ounces() (ounces amountUnits) {
+	ounces, _ = unitsOf("ounces")
 	return ounces
 }
 
 func TestUnitsOf(t *testing.T) {
 	expected := "kilograms"
-	units, err := UnitsOf(expected)
+	units, err := unitsOf(expected)
 	assert.Equal(t, expected, units.String())
 	assert.Nil(t, err)
 }
 
 func TestAmountOf(t *testing.T) {
 	var expected float64 = 20
-	amount := AmountOf(expected, kilos())
-	assert.Equal(t, expected, amount.Value)
-	assert.Equal(t, kilos(), amount.Units)
+	amount := amountOf(expected, kilos())
+	assert.Equal(t, expected, amount.value)
+	assert.Equal(t, kilos(), amount.units)
 }
 
 func TestSumOf(t *testing.T) {
-	amount := AmountOf(20, kilos())
-	sum := OperatorOf(amount, amount, kilos(), Plus)
+	amount := amountOf(20, kilos())
+	sum := operatorOf(amount, amount, kilos(), Plus)
 	assert.Equal(t, amount, sum.left)
 	assert.Equal(t, amount, sum.right)
 	assert.Equal(t, kilos(), sum.units)
@@ -49,35 +49,35 @@ func TestSumOf(t *testing.T) {
 
 func TestSum(t *testing.T) {
 	// 20 kg + 20 kg = ? kg
-	sum := OperatorOf(AmountOf(20, kilos()), AmountOf(20, kilos()), kilos(), Plus)
+	sum := operatorOf(amountOf(20, kilos()), amountOf(20, kilos()), kilos(), Plus)
 	actual, err := sum.Evaluate()
-	expected := AmountOf(40, kilos())
+	expected := amountOf(40, kilos())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestSumDifferentUnits(t *testing.T) {
 	// 2 kg + 2000 g = ? kg
-	sum := OperatorOf(AmountOf(2, kilos()), AmountOf(2000, grams()), kilos(), Plus)
+	sum := operatorOf(amountOf(2, kilos()), amountOf(2000, grams()), kilos(), Plus)
 	actual, err := sum.Evaluate()
-	expected := AmountOf(4, kilos())
+	expected := amountOf(4, kilos())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestSumThenConvert(t *testing.T) {
 	// 2000 g + 2000 g = ? kg
-	sum := OperatorOf(AmountOf(2000, grams()), AmountOf(2000, grams()), kilos(), Plus)
+	sum := operatorOf(amountOf(2000, grams()), amountOf(2000, grams()), kilos(), Plus)
 	actual, err := sum.Evaluate()
-	expected := AmountOf(4, kilos())
+	expected := amountOf(4, kilos())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestConvert(t *testing.T) {
-	convert := UnitConverterOf(AmountOf(2, kilos()), grams())
+	convert := unitConverterOf(amountOf(2, kilos()), grams())
 	actual, err := convert.Evaluate()
-	expected := AmountOf(2000, grams())
+	expected := amountOf(2000, grams())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }

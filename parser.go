@@ -5,19 +5,19 @@ import (
 	"strconv"
 )
 
-// Parser Parses input text and outputs an expression.
+// Parser Parses input text and outputs an Expression.
 type Parser struct {
 	tokenizer   *Tokenizer
 	expressions chan Expression
 }
 
-// NewParser Creates a new parser.
+// NewParser Creates a new Parser.
 func NewParser(input string) *Parser {
 	parser := &Parser{tokenizer: NewTokenizer(input)}
 	return parser
 }
 
-// Parse Parse the input text and return an expression
+// Parse Parse the input text and return an Expression
 func (parser *Parser) Parse() (Expression, error) {
 	var expression Expression
 	amount1, err := parser.expectAmount()
@@ -40,7 +40,7 @@ func (parser *Parser) Parse() (Expression, error) {
 	}
 }
 
-func (parser *Parser) expectConversion(amount1 Amount) (Expression, error) {
+func (parser *Parser) expectConversion(amount1 amount) (Expression, error) {
 	var expression Expression
 
 	// expect the units to convert to
@@ -56,10 +56,10 @@ func (parser *Parser) expectConversion(amount1 Amount) (Expression, error) {
 	}
 
 	// success
-	return UnitConverterOf(amount1, units), nil
+	return unitConverterOf(amount1, units), nil
 }
 
-func (parser *Parser) expectOperation(amount1 Amount, operator TokenType) (Expression, error) {
+func (parser *Parser) expectOperation(amount1 amount, operator TokenType) (Expression, error) {
 	// to this point, we've already seen... operand1 +
 	var expression Expression
 
@@ -74,7 +74,7 @@ func (parser *Parser) expectOperation(amount1 Amount, operator TokenType) (Expre
 	switch token.TokenType {
 	case EOF:
 		// success; default to units of the first operand for expressions like '2 kg + 2 g'
-		return OperatorOf(amount1, amount2, amount1.Units, operator), nil
+		return operatorOf(amount1, amount2, amount1.units, operator), nil
 
 	case In:
 		// the units have been specified for expressions like '2 kg + 2 g in grams'
@@ -90,15 +90,15 @@ func (parser *Parser) expectOperation(amount1 Amount, operator TokenType) (Expre
 		}
 
 		// success
-		return OperatorOf(amount1, amount2, units, operator), nil
+		return operatorOf(amount1, amount2, units, operator), nil
 
 	default:
 		return expression, fmt.Errorf("parsing error on unexpected input '%s'", token.Value)
 	}
 }
 
-func (parser *Parser) expectAmount() (Amount, error) {
-	var amount Amount
+func (parser *Parser) expectAmount() (amount, error) {
+	var amount amount
 	token, err := parser.nextToken(Number)
 	if err != nil {
 		return amount, err
@@ -112,16 +112,16 @@ func (parser *Parser) expectAmount() (Amount, error) {
 	if err != nil {
 		return amount, err
 	}
-	expression := AmountOf(number, units)
+	expression := amountOf(number, units)
 	return expression, nil
 }
 
-func (parser *Parser) expectUnits() (units AmountUnits, err error) {
+func (parser *Parser) expectUnits() (units amountUnits, err error) {
 	token, err := parser.nextToken(Units)
 	if err != nil {
 		return units, err
 	}
-	units, err = UnitsOf(token.Value)
+	units, err = unitsOf(token.Value)
 	if err != nil {
 		return units, err
 	}

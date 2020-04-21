@@ -4,35 +4,35 @@ import (
 	units "github.com/bcicen/go-units"
 )
 
-// Expression An expression can be evaluated resulting in an amount.
+// Expression An Expression can be evaluated resulting in an amount.
 type Expression interface {
-	Evaluate() (Amount, error)
+	Evaluate() (amount, error)
 }
 
-// Amount Expressions should be evaluated to an amount.
-type Amount struct {
-	Value float64
-	Units AmountUnits
+// amount Expressions should be evaluated to an amount.
+type amount struct {
+	value float64
+	units amountUnits
 }
 
-// AmountOf Create a new Amount.
-func AmountOf(value float64, units AmountUnits) Amount {
-	return Amount{Value: value, Units: units}
+// amountOf Create a new amount.
+func amountOf(value float64, units amountUnits) amount {
+	return amount{value: value, units: units}
 }
 
-// Evaluate An Amount is an expression and can be evaluated.
-func (amount Amount) Evaluate() (Amount, error) {
+// Evaluate An amount is an Expression and can be evaluated.
+func (amount amount) Evaluate() (amount, error) {
 	return amount, nil
 }
 
-// AmountUnits The units of an Amount, like kilograms.
-type AmountUnits struct {
+// amountUnits The units of an amount, like kilograms.
+type amountUnits struct {
 	units string
 }
 
-// UnitsOf Create a new AmountUnits.
-func UnitsOf(input string) (AmountUnits, error) {
-	var result AmountUnits
+// unitsOf Create a new amountUnits.
+func unitsOf(input string) (amountUnits, error) {
+	var result amountUnits
 
 	// ensure that the units are valid
 	unit, err := units.Find(input)
@@ -45,29 +45,29 @@ func UnitsOf(input string) (AmountUnits, error) {
 	return result, nil
 }
 
-func (units AmountUnits) String() string {
+func (units amountUnits) String() string {
 	return units.units
 }
 
-// Operator An expression that operates on multiple operands like +, -, *, and /.
-type Operator struct {
+// operator An Expression that operates on multiple operands like +, -, *, and /.
+type operator struct {
 	left     Expression
 	right    Expression
-	units    AmountUnits
+	units    amountUnits
 	operator TokenType
 }
 
-// OperatorOf Create a new Operator expression.
-func OperatorOf(left Expression, right Expression, units AmountUnits, operator TokenType) Operator {
-	return Operator{left: left, right: right, units: units, operator: operator}
+// operatorOf Create a new operator Expression.
+func operatorOf(left Expression, right Expression, units amountUnits, op TokenType) operator {
+	return operator{left: left, right: right, units: units, operator: op}
 }
 
-// allows multiple operations like +, -, etc to be handled by Operator
+// allows multiple operations like +, -, etc to be handled by operator
 type opFunction func(float64, float64) float64
 
-// Evaluate Operator is an expression that can be evaluated.
-func (op Operator) Evaluate() (Amount, error) {
-	var amount Amount
+// Evaluate operator is an Expression that can be evaluated.
+func (op operator) Evaluate() (amount, error) {
+	var amount amount
 	var operationFn opFunction
 
 	// what operation will be performed?
@@ -82,54 +82,54 @@ func (op Operator) Evaluate() (Amount, error) {
 		operationFn = func(x float64, y float64) float64 { return x / y }
 	}
 
-	// evaluate the first expression
+	// Evaluate the first Expression
 	result1, err := op.left.Evaluate()
 	if err != nil {
 		return amount, err
 	}
 
-	// evaluate the second expression
+	// Evaluate the second Expression
 	result2, err := op.right.Evaluate()
 	if err != nil {
 		return amount, err
 	}
 
 	// convert the units of the first result
-	if result1.Units != op.units {
-		result1, err = UnitConverterOf(result1, op.units).Evaluate()
+	if result1.units != op.units {
+		result1, err = unitConverterOf(result1, op.units).Evaluate()
 		if err != nil {
 			return amount, err
 		}
 	}
 
 	// convert the units of the second result
-	if result2.Units != op.units {
-		result2, err = UnitConverterOf(result2, op.units).Evaluate()
+	if result2.units != op.units {
+		result2, err = unitConverterOf(result2, op.units).Evaluate()
 		if err != nil {
 			return amount, err
 		}
 	}
 
 	// execute the operation
-	value := operationFn(result1.Value, result2.Value)
-	return AmountOf(value, op.units), nil
+	value := operationFn(result1.value, result2.value)
+	return amountOf(value, op.units), nil
 }
 
-// UnitConverter Converts from one unit to another.
-type UnitConverter struct {
-	from    Amount
-	toUnits AmountUnits
+// unitConverter Converts from one unit to another.
+type unitConverter struct {
+	from    amount
+	toUnits amountUnits
 }
 
-// UnitConverterOf Converts from one unit to another.
-func UnitConverterOf(from Amount, toUnits AmountUnits) UnitConverter {
-	return UnitConverter{from: from, toUnits: toUnits}
+// unitConverterOf Converts from one unit to another.
+func unitConverterOf(from amount, toUnits amountUnits) unitConverter {
+	return unitConverter{from: from, toUnits: toUnits}
 }
 
 // Evaluate Converts from one unit to another.
-func (c UnitConverter) Evaluate() (Amount, error) {
-	var amount Amount
-	fromUnits, err := units.Find(c.from.Units.units)
+func (c unitConverter) Evaluate() (amount, error) {
+	var amount amount
+	fromUnits, err := units.Find(c.from.units.units)
 	if err != nil {
 		return amount, err
 	}
@@ -137,9 +137,9 @@ func (c UnitConverter) Evaluate() (Amount, error) {
 	if err != nil {
 		return amount, err
 	}
-	value, err := units.ConvertFloat(c.from.Value, fromUnits, toUnits)
+	value, err := units.ConvertFloat(c.from.value, fromUnits, toUnits)
 	if err != nil {
 		return amount, err
 	}
-	return AmountOf(value.Float(), c.toUnits), nil
+	return amountOf(value.Float(), c.toUnits), nil
 }

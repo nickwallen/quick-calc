@@ -7,7 +7,7 @@ import (
 )
 
 func TestEmpty(t *testing.T) {
-	expected := []Token{Error.Token("expected number, but got ''")}
+	expected := []Token{Error.token("expected number, but got ''")}
 	inputs := []string{"", "  "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -15,7 +15,7 @@ func TestEmpty(t *testing.T) {
 }
 
 func TestDecimals(t *testing.T) {
-	expected := []Token{Number.Token("22"), EOF.Token("")}
+	expected := []Token{Number.token("22"), EOF.token("")}
 	inputs := []string{"22", "  22", "22    "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -23,7 +23,7 @@ func TestDecimals(t *testing.T) {
 }
 
 func TestZeros(t *testing.T) {
-	expected := []Token{Number.Token("0"), EOF.Token("")}
+	expected := []Token{Number.token("0"), EOF.token("")}
 	inputs := []string{"0", "  0", "0    "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -31,7 +31,7 @@ func TestZeros(t *testing.T) {
 }
 
 func TestCommas(t *testing.T) {
-	expected := []Token{Number.Token("2,200,123"), EOF.Token("")}
+	expected := []Token{Number.token("2,200,123"), EOF.token("")}
 	inputs := []string{"2,200,123", "  2,200,123", "2,200,123    "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -40,11 +40,11 @@ func TestCommas(t *testing.T) {
 
 func TestLeadComma(t *testing.T) {
 	input := ",200,200"
-	expect(t, []Token{Error.Token("expected number, but got ',2'")}, NewTokenizer(input).Tokens())
+	expect(t, []Token{Error.token("expected number, but got ',2'")}, NewTokenizer(input).Tokens())
 }
 
 func TestPositiveDecimals(t *testing.T) {
-	expected := []Token{Number.Token("+22"), EOF.Token("")}
+	expected := []Token{Number.token("+22"), EOF.token("")}
 	inputs := []string{"+22", "  +22", "+22    ", "+  22"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -52,7 +52,7 @@ func TestPositiveDecimals(t *testing.T) {
 }
 
 func TestNegativeDecimals(t *testing.T) {
-	expected := []Token{Number.Token("-22"), EOF.Token("")}
+	expected := []Token{Number.token("-22"), EOF.token("")}
 	inputs := []string{"-22", "  -22", "-22    ", "  - 22"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -60,7 +60,7 @@ func TestNegativeDecimals(t *testing.T) {
 }
 
 func TestBadDecimal(t *testing.T) {
-	expected := []Token{Number.Token("2"), Error.Token("expected symbol, but got '?'")}
+	expected := []Token{Number.token("2"), Error.token("expected symbol, but got '?'")}
 	inputs := []string{"2?", "   2?", "2?   "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -68,7 +68,7 @@ func TestBadDecimal(t *testing.T) {
 }
 
 func TestHexaDecimal(t *testing.T) {
-	expected := []Token{Number.Token("0xAF"), EOF.Token("")}
+	expected := []Token{Number.token("0xAF"), EOF.token("")}
 	inputs := []string{"0xAF", "   0xAF", "0xAF   "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -76,7 +76,7 @@ func TestHexaDecimal(t *testing.T) {
 }
 
 func TestBadHexaDecimal(t *testing.T) {
-	expected := []Token{Error.Token("expected number, but got '0xG'")}
+	expected := []Token{Error.token("expected number, but got '0xG'")}
 	inputs := []string{"0xG2", "   0xG2", "0xG2   "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -84,7 +84,7 @@ func TestBadHexaDecimal(t *testing.T) {
 }
 
 func TestNoHexaDecimal(t *testing.T) {
-	expected := []Token{Error.Token("expected number, but got '0x'")}
+	expected := []Token{Error.token("expected number, but got '0x'")}
 	inputs := []string{"0x", "   0x", "0x   "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -92,7 +92,7 @@ func TestNoHexaDecimal(t *testing.T) {
 }
 
 func TestFloats(t *testing.T) {
-	expected := []Token{Number.Token("2.22"), EOF.Token("")}
+	expected := []Token{Number.token("2.22"), EOF.token("")}
 	inputs := []string{"2.22", "   2.22", "2.22   "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -100,7 +100,7 @@ func TestFloats(t *testing.T) {
 }
 
 func TestExpNotation(t *testing.T) {
-	expected := []Token{Number.Token("2E10"), EOF.Token("")}
+	expected := []Token{Number.token("2E10"), EOF.token("")}
 	inputs := []string{"2E10", "   2E10", "2E10   "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -108,7 +108,7 @@ func TestExpNotation(t *testing.T) {
 }
 
 func TestPlus(t *testing.T) {
-	expected := []Token{Number.Token("2"), Plus.Token("+"), Number.Token("2"), EOF.Token("")}
+	expected := []Token{Number.token("2"), Plus.token("+"), Number.token("2"), EOF.token("")}
 	inputs := []string{"2 + 2", "   2+2", "   2 +   2   ", "2+2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -116,7 +116,7 @@ func TestPlus(t *testing.T) {
 }
 
 func TestPlusNegatives(t *testing.T) {
-	expected := []Token{Number.Token("2"), Plus.Token("+"), Number.Token("-2"), EOF.Token("")}
+	expected := []Token{Number.token("2"), Plus.token("+"), Number.token("-2"), EOF.token("")}
 	inputs := []string{"2 + -2", "   2+-2", "   2 +   -2   ", "2+-2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -124,7 +124,7 @@ func TestPlusNegatives(t *testing.T) {
 }
 
 func TestPlusPositives(t *testing.T) {
-	expected := []Token{Number.Token("2"), Plus.Token("+"), Number.Token("+2"), EOF.Token("")}
+	expected := []Token{Number.token("2"), Plus.token("+"), Number.token("+2"), EOF.token("")}
 	inputs := []string{"2 + +2", "   2++2", "   2 +   +2   ", "2++2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -132,7 +132,7 @@ func TestPlusPositives(t *testing.T) {
 }
 
 func TestTooManyPlus(t *testing.T) {
-	expected := []Token{Number.Token("2"), Plus.Token("+"), Error.Token("expected number, but got '++'")}
+	expected := []Token{Number.token("2"), Plus.token("+"), Error.token("expected number, but got '++'")}
 	inputs := []string{"2 +++ 2", "   2+++2", "   2+++   2   ", "2+++2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -140,7 +140,7 @@ func TestTooManyPlus(t *testing.T) {
 }
 
 func TestMinus(t *testing.T) {
-	expected := []Token{Number.Token("2"), Minus.Token("-"), Number.Token("2"), EOF.Token("")}
+	expected := []Token{Number.token("2"), Minus.token("-"), Number.token("2"), EOF.token("")}
 	inputs := []string{"2 - 2", "   2-2", "   2 -   2   ", "2-2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -148,7 +148,7 @@ func TestMinus(t *testing.T) {
 }
 
 func TestMinusNegatives(t *testing.T) {
-	expected := []Token{Number.Token("2"), Minus.Token("-"), Number.Token("-2"), EOF.Token("")}
+	expected := []Token{Number.token("2"), Minus.token("-"), Number.token("-2"), EOF.token("")}
 	inputs := []string{"2 - -2", "   2--2", "   2 -   -2   ", "2--2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -156,7 +156,7 @@ func TestMinusNegatives(t *testing.T) {
 }
 
 func TestMinusPositives(t *testing.T) {
-	expected := []Token{Number.Token("2"), Minus.Token("-"), Number.Token("+2"), EOF.Token("")}
+	expected := []Token{Number.token("2"), Minus.token("-"), Number.token("+2"), EOF.token("")}
 	inputs := []string{"2 - +2", "   2-+2", "   2 -   +2   ", "2-+2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -164,7 +164,7 @@ func TestMinusPositives(t *testing.T) {
 }
 
 func TestTooManyMinus(t *testing.T) {
-	expected := []Token{Number.Token("2"), Minus.Token("-"), Error.Token("expected number, but got '--'")}
+	expected := []Token{Number.token("2"), Minus.token("-"), Error.token("expected number, but got '--'")}
 	inputs := []string{"2 --- 2", "   2---2", "   2 ---   2   ", "2---2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -172,7 +172,7 @@ func TestTooManyMinus(t *testing.T) {
 }
 
 func TestMultiply(t *testing.T) {
-	expected := []Token{Number.Token("2"), Multiply.Token("*"), Number.Token("2"), EOF.Token("")}
+	expected := []Token{Number.token("2"), Multiply.token("*"), Number.token("2"), EOF.token("")}
 	inputs := []string{"2 * 2", "   2*2", "   2 *   2   ", "2*2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -180,7 +180,7 @@ func TestMultiply(t *testing.T) {
 }
 
 func TestManyMultiplies(t *testing.T) {
-	expected := []Token{Number.Token("2"), Multiply.Token("*"), Error.Token("expected number, but got '*'")}
+	expected := []Token{Number.token("2"), Multiply.token("*"), Error.token("expected number, but got '*'")}
 	inputs := []string{"2 ** 2", "   2**2", "   2 **   2   ", "2**2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -188,7 +188,7 @@ func TestManyMultiplies(t *testing.T) {
 }
 
 func TestDivide(t *testing.T) {
-	expected := []Token{Number.Token("2"), Divide.Token("/"), Number.Token("2"), EOF.Token("")}
+	expected := []Token{Number.token("2"), Divide.token("/"), Number.token("2"), EOF.token("")}
 	inputs := []string{"2 / 2", "   2/2", "   2 /   2   ", "2/2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -196,7 +196,7 @@ func TestDivide(t *testing.T) {
 }
 
 func TestManyDivides(t *testing.T) {
-	expected := []Token{Number.Token("2"), Divide.Token("/"), Error.Token("expected number, but got '/'")}
+	expected := []Token{Number.token("2"), Divide.token("/"), Error.token("expected number, but got '/'")}
 	inputs := []string{"2 // 2", "   2//2", "   2 //   2   ", "2//2"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -204,7 +204,7 @@ func TestManyDivides(t *testing.T) {
 }
 
 func TestUnits(t *testing.T) {
-	expected := []Token{Number.Token("245"), Units.Token("pounds"), EOF.Token("")}
+	expected := []Token{Number.token("245"), Units.token("pounds"), EOF.token("")}
 	inputs := []string{"245 pounds", "    245 pounds", "245pounds"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -213,12 +213,12 @@ func TestUnits(t *testing.T) {
 
 func TestAddUnits(t *testing.T) {
 	expected := []Token{
-		Number.Token("245"),
-		Units.Token("pounds"),
-		Plus.Token("+"),
-		Number.Token("37.50"),
-		Units.Token("kg"),
-		EOF.Token("")}
+		Number.token("245"),
+		Units.token("pounds"),
+		Plus.token("+"),
+		Number.token("37.50"),
+		Units.token("kg"),
+		EOF.token("")}
 	inputs := []string{"245 pounds + 37.50kg", "245   pounds   + 37.50   kg"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -226,8 +226,8 @@ func TestAddUnits(t *testing.T) {
 }
 
 func TestConversion(t *testing.T) {
-	expected := []Token{Number.Token("20"), Units.Token("lbs"), In.Token("in"),
-		Units.Token("kg"), EOF.Token("")}
+	expected := []Token{Number.token("20"), Units.token("lbs"), In.token("in"),
+		Units.token("kg"), EOF.token("")}
 	inputs := []string{"20 lbs in kg", "   20lbs in   kg   "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -235,7 +235,7 @@ func TestConversion(t *testing.T) {
 }
 
 func TestUnitsStartWithIn(t *testing.T) {
-	expected := []Token{Number.Token("20"), Units.Token("ints"), EOF.Token("")}
+	expected := []Token{Number.token("20"), Units.token("ints"), EOF.token("")}
 	inputs := []string{"20 ints", "   20ints   "}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())
@@ -244,14 +244,14 @@ func TestUnitsStartWithIn(t *testing.T) {
 
 func TestAddThenConvert(t *testing.T) {
 	expected := []Token{
-		Number.Token("245"),
-		Units.Token("pounds"),
-		Plus.Token("+"),
-		Number.Token("37.50"),
-		Units.Token("kg"),
-		In.Token("in"),
-		Units.Token("kilos"),
-		EOF.Token("")}
+		Number.token("245"),
+		Units.token("pounds"),
+		Plus.token("+"),
+		Number.token("37.50"),
+		Units.token("kg"),
+		In.token("in"),
+		Units.token("kilos"),
+		EOF.token("")}
 	inputs := []string{"245 pounds + 37.50 kg in kilos"}
 	for _, input := range inputs {
 		expect(t, expected, NewTokenizer(input).Tokens())

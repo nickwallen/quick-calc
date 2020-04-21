@@ -10,7 +10,7 @@ func TestParseAmount(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
-	expected := AmountOf(23, pounds())
+	expected := amountOf(23, pounds())
 	assert.Equal(t, expected, actual)
 }
 
@@ -29,7 +29,7 @@ func TestParseSum(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
-	expected := OperatorOf(AmountOf(23, kilos()), AmountOf(23, pounds()), kilos(), Plus)
+	expected := operatorOf(amountOf(23, kilos()), amountOf(23, pounds()), kilos(), Plus)
 	assert.Equal(t, expected, actual)
 }
 
@@ -38,7 +38,7 @@ func TestParseSubtract(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
-	expected := OperatorOf(AmountOf(23, kilos()), AmountOf(23, pounds()), kilos(), Minus)
+	expected := operatorOf(amountOf(23, kilos()), amountOf(23, pounds()), kilos(), Minus)
 	assert.Equal(t, expected, actual)
 }
 
@@ -47,7 +47,7 @@ func TestParseConversion(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
-	expected := UnitConverterOf(AmountOf(2, pounds()), ounces())
+	expected := unitConverterOf(amountOf(2, pounds()), ounces())
 	assert.Equal(t, expected, actual)
 }
 
@@ -56,7 +56,7 @@ func TestParseSumAndConvert(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
-	expected := OperatorOf(AmountOf(2, ounces()), AmountOf(2, pounds()), pounds(), Plus)
+	expected := operatorOf(amountOf(2, ounces()), amountOf(2, pounds()), pounds(), Plus)
 	assert.Equal(t, expected, actual)
 }
 
@@ -65,6 +65,6 @@ func TestParseSubtractAndConvert(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, "unexpected error: %s", err)
 	}
-	expected := OperatorOf(AmountOf(2, pounds()), AmountOf(2, ounces()), ounces(), Minus)
+	expected := operatorOf(amountOf(2, pounds()), amountOf(2, ounces()), ounces(), Minus)
 	assert.Equal(t, expected, actual)
 }

@@ -5,13 +5,13 @@ import (
 	"unicode"
 )
 
-// Token a tokenizer emits tokens.
+// Token a Tokenizer emits tokens.
 type Token struct {
 	TokenType TokenType // the type like numberToken
 	Value     string    // the value, like "46.2"
 }
 
-// TokenType the type of an emitted token
+// TokenType the type of an emitted Token
 type TokenType int
 
 const (
@@ -61,7 +61,7 @@ func (t TokenType) String() string {
 }
 
 // Token Returns a new Token of this type.
-func (t TokenType) Token(value string) Token {
+func (t TokenType) token(value string) Token {
 	return Token{TokenType: t, Value: value}
 }
 
