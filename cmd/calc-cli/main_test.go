@@ -9,7 +9,7 @@ import (
 func TestCalculate(t *testing.T) {
 	writer := bytes.NewBufferString("")
 	calculate("23 kg + 23 kg", writer)
-	assert.Equal(t, "46.00 kg \n", writer.String())
+	assert.Equal(t, "46.00 kilograms \n", writer.String())
 }
 
 func TestTokenize(t *testing.T) {

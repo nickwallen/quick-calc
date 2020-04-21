@@ -121,7 +121,10 @@ func (parser *Parser) expectUnits() (units AmountUnits, err error) {
 	if err != nil {
 		return units, err
 	}
-	units = UnitsOf(token.Value)
+	units, err = UnitsOf(token.Value)
+	if err != nil {
+		return units, err
+	}
 	return units, nil
 }
 

@@ -31,8 +31,18 @@ type AmountUnits struct {
 }
 
 // UnitsOf Create a new AmountUnits.
-func UnitsOf(units string) AmountUnits {
-	return AmountUnits{units: units}
+func UnitsOf(input string) (AmountUnits, error) {
+	var result AmountUnits
+
+	// ensure that the units are valid
+	unit, err := units.Find(input)
+	if err != nil {
+		return result, err
+	}
+
+	// use a 'standard' name which may differ from what the user input
+	result.units = unit.PluralName()
+	return result, nil
 }
 
 func (units AmountUnits) String() string {
