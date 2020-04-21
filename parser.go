@@ -21,36 +21,80 @@ func NewParser(input string) *Parser {
 func (parser *Parser) Parse() (Expression, error) {
 	var expression Expression
 	amount1, err := parser.expectAmount()
-	expression = amount1
 	if err != nil {
 		return expression, err
 	}
 
 	token := <-parser.tokenizer.Tokens()
-	if token.TokenType != EOF {
+	switch token.TokenType {
+	case Plus, Minus, Multiply, Divide:
+		return parser.expectOperation(amount1, token.TokenType)
+	case In:
+		return parser.expectConversion(amount1)
+	case EOF:
+		// all tokens have been consumed
+		return amount1, nil
+	default:
+		// tokens remain, something bad happened
+		return expression, fmt.Errorf("parsing error on unexpected input '%s'", token.Value)
+	}
+}
 
-		// expect an operand
-		switch token.TokenType {
-		case Plus:
-			amount2, err := parser.expectAmount()
-			if err != nil {
-				return expression, err
-			}
-			return SumOf(amount1, amount2, amount1.Units), nil
-		case Minus:
-			amount2, err := parser.expectAmount()
-			if err != nil {
-				return expression, err
-			}
-			return DiffOf(amount1, amount2, amount1.Units), nil
+func (parser *Parser) expectConversion(amount1 Amount) (Expression, error) {
+	var expression Expression
+
+	// expect the units to convert to
+	units, err := parser.expectUnits()
+	if err != nil {
+		return expression, err
+	}
+
+	// expect EOF
+	_, err = parser.nextToken(EOF)
+	if err != nil {
+		return expression, err
+	}
+
+	// success
+	return UnitConverterOf(amount1, units), nil
+}
+
+func (parser *Parser) expectOperation(amount1 Amount, operator TokenType) (Expression, error) {
+	// to this point, we've already seen... operand1 +
+	var expression Expression
+
+	// expect the second operand
+	amount2, err := parser.expectAmount()
+	if err != nil {
+		return expression, err
+	}
+
+	// what units should the result be in?
+	token := <-parser.tokenizer.Tokens()
+	switch token.TokenType {
+	case EOF:
+		// success; default to units of the first operand for expressions like '2 kg + 2 g'
+		return OperatorOf(amount1, amount2, amount1.Units, operator), nil
+
+	case In:
+		// the units have been specified for expressions like '2 kg + 2 g in grams'
+		units, err := parser.expectUnits()
+		if err != nil {
+			return expression, err
 		}
+
+		// expect EOF
+		_, err = parser.nextToken(EOF)
+		if err != nil {
+			return expression, err
+		}
+
+		// success
+		return OperatorOf(amount1, amount2, units, operator), nil
+
+	default:
+		return expression, fmt.Errorf("parsing error on unexpected input '%s'", token.Value)
 	}
-	if token.TokenType == EOF {
-		// successfully parsed the entire string
-		return expression, nil
-	}
-	// error - we're done, but there are more tokens to parse.
-	return expression, fmt.Errorf("unsupported operation: %s", token.TokenType)
 }
 
 func (parser *Parser) expectAmount() (Amount, error) {
@@ -59,20 +103,26 @@ func (parser *Parser) expectAmount() (Amount, error) {
 	if err != nil {
 		return amount, err
 	}
-
 	// TODO where to handle hexadecimal vs decimal?
 	number, err := strconv.ParseFloat(token.Value, 64)
 	if err != nil {
 		return amount, err
 	}
-
-	units, err := parser.nextToken(Units)
+	units, err := parser.expectUnits()
 	if err != nil {
 		return amount, err
 	}
-
-	expression := AmountOf(number, UnitsOf(units.Value))
+	expression := AmountOf(number, units)
 	return expression, nil
+}
+
+func (parser *Parser) expectUnits() (units AmountUnits, err error) {
+	token, err := parser.nextToken(Units)
+	if err != nil {
+		return units, err
+	}
+	units = UnitsOf(token.Value)
+	return units, nil
 }
 
 func (parser *Parser) nextToken(expected TokenType) (Token, error) {
