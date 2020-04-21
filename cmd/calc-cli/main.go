@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/nickwallen/toks"
+	"github.com/nickwallen/toks/internal/tokenizer"
 	"io"
 	"os"
 )
@@ -13,8 +14,8 @@ const (
 )
 
 func tokenize(input string, writer io.Writer) {
-	output := make(chan toks.Token, 2)
-	go toks.Tokenize(input, output)
+	output := make(chan tokenizer.Token, 2)
+	go tokenizer.Tokenize(input, output)
 	for token := range output {
 		fmt.Fprintf(writer, "%v  ", token)
 	}

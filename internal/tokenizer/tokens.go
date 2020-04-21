@@ -1,4 +1,4 @@
-package toks
+package tokenizer
 
 import (
 	"fmt"
@@ -61,7 +61,7 @@ func (t TokenType) String() string {
 }
 
 // Token Returns a new Token of this type.
-func (t TokenType) token(value string) Token {
+func (t TokenType) Token(value string) Token {
 	return Token{TokenType: t, Value: value}
 }
 

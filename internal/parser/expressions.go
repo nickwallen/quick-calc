@@ -1,40 +1,41 @@
-package toks
+package parser
 
 import (
 	units "github.com/bcicen/go-units"
+	"github.com/nickwallen/toks/internal/tokenizer"
 )
 
-// Expression An Expression can be evaluated resulting in an amount.
+// Expression An Expression can be evaluated resulting in an Amount.
 type Expression interface {
-	Evaluate() (amount, error)
+	Evaluate() (Amount, error)
 }
 
-// amount Expressions should be evaluated to an amount.
-type amount struct {
-	value float64
-	units amountUnits
+// Amount Expressions should be evaluated to an Amount.
+type Amount struct {
+	Value float64
+	Units Units
 }
 
-// amountOf Create a new amount.
-func amountOf(value float64, units amountUnits) amount {
-	return amount{value: value, units: units}
+// AmountOf Create a new Amount.
+func AmountOf(value float64, units Units) Amount {
+	return Amount{Value: value, Units: units}
 }
 
-// Evaluate An amount is an Expression and can be evaluated.
-func (amount amount) Evaluate() (amount, error) {
+// Evaluate An Amount is an Expression and can be evaluated.
+func (amount Amount) Evaluate() (Amount, error) {
 	return amount, nil
 }
 
-// amountUnits The units of an amount, like kilograms.
-type amountUnits struct {
+// Units The units of an Amount, like kilograms.
+type Units struct {
 	units string
 }
 
-// unitsOf Create a new amountUnits.
-func unitsOf(input string) (amountUnits, error) {
-	var result amountUnits
+// UnitsOf Create a new Units.
+func UnitsOf(input string) (Units, error) {
+	var result Units
 
-	// ensure that the units are valid
+	// ensure that the Units are valid
 	unit, err := units.Find(input)
 	if err != nil {
 		return result, err
@@ -45,7 +46,7 @@ func unitsOf(input string) (amountUnits, error) {
 	return result, nil
 }
 
-func (units amountUnits) String() string {
+func (units Units) String() string {
 	return units.units
 }
 
@@ -53,12 +54,12 @@ func (units amountUnits) String() string {
 type operator struct {
 	left     Expression
 	right    Expression
-	units    amountUnits
-	operator TokenType
+	units    Units
+	operator tokenizer.TokenType
 }
 
 // operatorOf Create a new operator Expression.
-func operatorOf(left Expression, right Expression, units amountUnits, op TokenType) operator {
+func operatorOf(left Expression, right Expression, units Units, op tokenizer.TokenType) operator {
 	return operator{left: left, right: right, units: units, operator: op}
 }
 
@@ -66,19 +67,19 @@ func operatorOf(left Expression, right Expression, units amountUnits, op TokenTy
 type opFunction func(float64, float64) float64
 
 // Evaluate operator is an Expression that can be evaluated.
-func (op operator) Evaluate() (amount, error) {
-	var amount amount
+func (op operator) Evaluate() (Amount, error) {
+	var amount Amount
 	var operationFn opFunction
 
 	// what operation will be performed?
 	switch op.operator {
-	case Plus:
+	case tokenizer.Plus:
 		operationFn = func(x float64, y float64) float64 { return x + y }
-	case Minus:
+	case tokenizer.Minus:
 		operationFn = func(x float64, y float64) float64 { return x - y }
-	case Multiply:
+	case tokenizer.Multiply:
 		operationFn = func(x float64, y float64) float64 { return x * y }
-	case Divide:
+	case tokenizer.Divide:
 		operationFn = func(x float64, y float64) float64 { return x / y }
 	}
 
@@ -94,16 +95,16 @@ func (op operator) Evaluate() (amount, error) {
 		return amount, err
 	}
 
-	// convert the units of the first result
-	if result1.units != op.units {
+	// convert the Units of the first result
+	if result1.Units != op.units {
 		result1, err = unitConverterOf(result1, op.units).Evaluate()
 		if err != nil {
 			return amount, err
 		}
 	}
 
-	// convert the units of the second result
-	if result2.units != op.units {
+	// convert the Units of the second result
+	if result2.Units != op.units {
 		result2, err = unitConverterOf(result2, op.units).Evaluate()
 		if err != nil {
 			return amount, err
@@ -111,25 +112,25 @@ func (op operator) Evaluate() (amount, error) {
 	}
 
 	// execute the operation
-	value := operationFn(result1.value, result2.value)
-	return amountOf(value, op.units), nil
+	value := operationFn(result1.Value, result2.Value)
+	return AmountOf(value, op.units), nil
 }
 
 // unitConverter Converts from one unit to another.
 type unitConverter struct {
-	from    amount
-	toUnits amountUnits
+	from    Amount
+	toUnits Units
 }
 
 // unitConverterOf Converts from one unit to another.
-func unitConverterOf(from amount, toUnits amountUnits) unitConverter {
+func unitConverterOf(from Amount, toUnits Units) unitConverter {
 	return unitConverter{from: from, toUnits: toUnits}
 }
 
 // Evaluate Converts from one unit to another.
-func (c unitConverter) Evaluate() (amount, error) {
-	var amount amount
-	fromUnits, err := units.Find(c.from.units.units)
+func (c unitConverter) Evaluate() (Amount, error) {
+	var amount Amount
+	fromUnits, err := units.Find(c.from.Units.units)
 	if err != nil {
 		return amount, err
 	}
@@ -137,9 +138,9 @@ func (c unitConverter) Evaluate() (amount, error) {
 	if err != nil {
 		return amount, err
 	}
-	value, err := units.ConvertFloat(c.from.value, fromUnits, toUnits)
+	value, err := units.ConvertFloat(c.from.Value, fromUnits, toUnits)
 	if err != nil {
 		return amount, err
 	}
-	return amountOf(value.Float(), c.toUnits), nil
+	return AmountOf(value.Float(), c.toUnits), nil
 }

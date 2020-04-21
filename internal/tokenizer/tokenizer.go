@@ -1,4 +1,4 @@
-package toks
+package tokenizer
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ type Tokenizer struct {
 // the state of the scanner as a function that returns the next state.
 type stateFn func(*Tokenizer) stateFn
 
-// Tokenize Tokenizes the input string and writes each token to the output channel.
+// Tokenize Tokenizes the input string and writes each Token to the output channel.
 func Tokenize(input string, output chan Token) {
 	tok := &Tokenizer{
 		state:  expectNumber,
@@ -34,7 +34,7 @@ func Tokenize(input string, output chan Token) {
 	tok.run()
 }
 
-// TokenizeToSlice Tokenizes the input string and returns each token as a slice.
+// TokenizeToSlice Tokenizes the input string and returns each Token as a slice.
 func TokenizeToSlice(input string) []Token {
 	// tokenize in a separate goroutine
 	output := make(chan Token)
@@ -60,9 +60,9 @@ func (tok *Tokenizer) emit(tokenType TokenType) {
 	var token Token
 	switch tokenType {
 	case EOF:
-		token = EOF.token("")
+		token = EOF.Token("")
 	default:
-		token = tokenType.token(tok.current())
+		token = tokenType.Token(tok.current())
 	}
 	tok.tokens <- token
 	tok.start = tok.pos
