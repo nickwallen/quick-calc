@@ -12,14 +12,14 @@ func Calculate(input string) (string, error) {
 	tokens := make(chan Token, 2)
 	go Tokenize(input, tokens)
 
-	// parse the input
-	expr, err := Parse(tokens)
+	// parse the tokens
+	expression, err := Parse(tokens)
 	if err != nil {
 		return result, fmt.Errorf("parse error: %s", err.Error())
 	}
 
 	// evaluate the expression
-	amount, err := expr.Evaluate()
+	amount, err := expression.Evaluate()
 	if err != nil {
 		return result, fmt.Errorf("execution error: %s", err.Error())
 	}
