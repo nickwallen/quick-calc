@@ -8,6 +8,11 @@ import (
 // TokenChannel Enables tokens to be read from and written to a channel.
 type TokenChannel chan tokens.Token
 
+// NewTokenChannel Creates a new token channel.
+func NewTokenChannel() TokenChannel {
+	return make(chan tokens.Token, 2)
+}
+
 // ReadToken Reads tokens from a channel.
 func (ch TokenChannel) ReadToken() (tokens.Token, error) {
 	var token tokens.Token

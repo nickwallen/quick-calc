@@ -6,7 +6,6 @@ import (
 	"github.com/nickwallen/toks"
 	"github.com/nickwallen/toks/internal/io"
 	"github.com/nickwallen/toks/internal/tokenizer"
-	"github.com/nickwallen/toks/internal/tokens"
 	"os"
 )
 
@@ -26,7 +25,7 @@ type outputWriter interface {
 
 // tokenize the input string
 func tokenize(input string, writer outputWriter) {
-	var output io.TokenChannel = make(chan tokens.Token, 2)
+	output := io.NewTokenChannel()
 	go tokenizer.Tokenize(input, output)
 	for token := range output {
 		fmt.Fprintf(writer, "%v  ", token)

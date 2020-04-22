@@ -5,16 +5,14 @@ import (
 	"github.com/nickwallen/toks/internal/io"
 	"github.com/nickwallen/toks/internal/parser"
 	"github.com/nickwallen/toks/internal/tokenizer"
-	tokens2 "github.com/nickwallen/toks/internal/tokens"
 )
 
 // Calculate Calculates the value of an input Expression.
 func Calculate(input string) (string, error) {
 	var result string
-	var tokens io.TokenChannel
 
 	// the tokenizer runs in the background populating the token channel
-	tokens = make(chan tokens2.Token, 2)
+	tokens := io.NewTokenChannel()
 	go tokenizer.Tokenize(input, tokens)
 
 	// parse the tokens
