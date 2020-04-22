@@ -4,8 +4,8 @@ all:
 test:
 	.githooks/pre-commit
 
-run-tokenizer:
-	go run cmd/calc-cli/main.go tokens
+debug:
+	go run cmd/calc-cli/main.go debug
 
 run:
 	go run cmd/calc-cli/main.go

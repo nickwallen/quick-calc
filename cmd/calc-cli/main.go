@@ -4,25 +4,37 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/nickwallen/toks"
+	"github.com/nickwallen/toks/internal/io"
 	"github.com/nickwallen/toks/internal/tokenizer"
-	"github.com/nickwallen/toks/internal/util"
-	"io"
+	"github.com/nickwallen/toks/internal/tokens"
 	"os"
 )
 
 const (
-	tokenMode = "tokens"
+	debugMode = "debug"
 )
 
-func tokenize(input string, writer io.Writer) {
-	var output util.TokenChannel = make(chan tokenizer.Token, 2)
+// used to read input from the user
+type inputReader interface {
+	ReadString(delimiter byte) (string, error)
+}
+
+// used to write output for the user
+type outputWriter interface {
+	Write(p []byte) (n int, err error)
+}
+
+// tokenize the input string
+func tokenize(input string, writer outputWriter) {
+	var output io.TokenChannel = make(chan tokens.Token, 2)
 	go tokenizer.Tokenize(input, output)
 	for token := range output {
 		fmt.Fprintf(writer, "%v  ", token)
 	}
 }
 
-func calculate(input string, writer io.Writer) {
+// calculate the value of each expression
+func calculate(input string, writer outputWriter) {
 	result, err := toks.Calculate(input)
 	if err != nil {
 		fmt.Printf("%s \n", err)
@@ -31,16 +43,19 @@ func calculate(input string, writer io.Writer) {
 	fmt.Fprintf(writer, "%s \n", result)
 }
 
-func prompt(stdin io.Reader, writer io.Writer, mode string) {
+// prompt the user for input
+func prompt(reader inputReader, writer outputWriter, mode string) {
 	// prompt for input
-	reader := bufio.NewReader(stdin)
 	fmt.Fprintf(writer, "\n > ")
 	input, _ := reader.ReadString('\n')
 
+	// start-up either the calculator or the tokenizer
 	switch mode {
-	case tokenMode:
+	case debugMode:
+		// output just the tokens
 		tokenize(input, writer)
 	default:
+		// evaluate each expression
 		calculate(input, writer)
 	}
 }
@@ -50,7 +65,8 @@ func main() {
 	if len(os.Args) > 1 {
 		mode = os.Args[1]
 	}
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		prompt(os.Stdin, os.Stdout, mode)
+		prompt(reader, os.Stdout, mode)
 	}
 }

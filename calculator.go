@@ -2,18 +2,19 @@ package toks
 
 import (
 	"fmt"
+	"github.com/nickwallen/toks/internal/io"
 	"github.com/nickwallen/toks/internal/parser"
 	"github.com/nickwallen/toks/internal/tokenizer"
-	"github.com/nickwallen/toks/internal/util"
+	tokens2 "github.com/nickwallen/toks/internal/tokens"
 )
 
 // Calculate Calculates the value of an input Expression.
 func Calculate(input string) (string, error) {
 	var result string
-	var tokens util.TokenChannel
+	var tokens io.TokenChannel
 
 	// the tokenizer runs in the background populating the token channel
-	tokens = make(chan tokenizer.Token, 2)
+	tokens = make(chan tokens2.Token, 2)
 	go tokenizer.Tokenize(input, tokens)
 
 	// parse the tokens

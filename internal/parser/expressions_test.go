@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"github.com/nickwallen/toks/internal/tokenizer"
+	"github.com/nickwallen/toks/internal/tokens"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -42,7 +42,7 @@ func TestAmountOf(t *testing.T) {
 
 func TestSumOf(t *testing.T) {
 	amount := AmountOf(20, kilos())
-	sum := operatorOf(amount, amount, kilos(), tokenizer.Plus)
+	sum := operatorOf(amount, amount, kilos(), tokens.Plus)
 	assert.Equal(t, amount, sum.left)
 	assert.Equal(t, amount, sum.right)
 	assert.Equal(t, kilos(), sum.units)
@@ -50,7 +50,7 @@ func TestSumOf(t *testing.T) {
 
 func TestSum(t *testing.T) {
 	// 20 kg + 20 kg = ? kg
-	sum := operatorOf(AmountOf(20, kilos()), AmountOf(20, kilos()), kilos(), tokenizer.Plus)
+	sum := operatorOf(AmountOf(20, kilos()), AmountOf(20, kilos()), kilos(), tokens.Plus)
 	actual, err := sum.Evaluate()
 	expected := AmountOf(40, kilos())
 	assert.Equal(t, expected, actual)
@@ -59,7 +59,7 @@ func TestSum(t *testing.T) {
 
 func TestSumDifferentUnits(t *testing.T) {
 	// 2 kg + 2000 g = ? kg
-	sum := operatorOf(AmountOf(2, kilos()), AmountOf(2000, grams()), kilos(), tokenizer.Plus)
+	sum := operatorOf(AmountOf(2, kilos()), AmountOf(2000, grams()), kilos(), tokens.Plus)
 	actual, err := sum.Evaluate()
 	expected := AmountOf(4, kilos())
 	assert.Equal(t, expected, actual)
@@ -68,7 +68,7 @@ func TestSumDifferentUnits(t *testing.T) {
 
 func TestSumThenConvert(t *testing.T) {
 	// 2000 g + 2000 g = ? kg
-	sum := operatorOf(AmountOf(2000, grams()), AmountOf(2000, grams()), kilos(), tokenizer.Plus)
+	sum := operatorOf(AmountOf(2000, grams()), AmountOf(2000, grams()), kilos(), tokens.Plus)
 	actual, err := sum.Evaluate()
 	expected := AmountOf(4, kilos())
 	assert.Equal(t, expected, actual)

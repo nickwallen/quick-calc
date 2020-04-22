@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"github.com/nickwallen/toks/internal/tokenizer"
+	"github.com/nickwallen/toks/internal/tokens"
 	"strconv"
 )
 
@@ -15,7 +15,7 @@ type parser struct {
 
 // the interface used by the parser to read tokens
 type tokenReader interface {
-	ReadToken() (tokenizer.Token, error)
+	ReadToken() (tokens.Token, error)
 }
 
 // Parse Parses a series of tokens and returns an expression.
@@ -36,13 +36,13 @@ func Parse(reader tokenReader) (Expression, error) {
 
 	// the next token defines if this is an operation or a conversion
 	switch token.TokenType {
-	case tokenizer.Plus, tokenizer.Minus, tokenizer.Multiply, tokenizer.Divide:
+	case tokens.Plus, tokens.Minus, tokens.Multiply, tokens.Divide:
 		return parser.expectOperation(amount1, token.TokenType)
 
-	case tokenizer.In:
+	case tokens.In:
 		return parser.expectConversion(amount1)
 
-	case tokenizer.EOF:
+	case tokens.EOF:
 		// all tokens have been consumed, all we have is the first amount
 		return amount1, nil
 
@@ -62,7 +62,7 @@ func (parser *parser) expectConversion(amount1 Amount) (Expression, error) {
 	}
 
 	// expect EOF
-	_, err = parser.nextToken(tokenizer.EOF)
+	_, err = parser.nextToken(tokens.EOF)
 	if err != nil {
 		return expression, err
 	}
@@ -71,7 +71,7 @@ func (parser *parser) expectConversion(amount1 Amount) (Expression, error) {
 	return unitConverterOf(amount1, units), nil
 }
 
-func (parser *parser) expectOperation(amount1 Amount, operator tokenizer.TokenType) (Expression, error) {
+func (parser *parser) expectOperation(amount1 Amount, operator tokens.TokenType) (Expression, error) {
 	// to this point, we've already seen... operand1 +
 	var expression Expression
 
@@ -88,11 +88,11 @@ func (parser *parser) expectOperation(amount1 Amount, operator tokenizer.TokenTy
 
 	// what units should the result be in?
 	switch token.TokenType {
-	case tokenizer.EOF:
+	case tokens.EOF:
 		// success; default to Units of the first operand for expressions like '2 kg + 2 g'
 		return operatorOf(amount1, amount2, amount1.Units, operator), nil
 
-	case tokenizer.In:
+	case tokens.In:
 		// the Units have been specified for expressions like '2 kg + 2 g in grams'
 		units, err := parser.expectUnits()
 		if err != nil {
@@ -100,7 +100,7 @@ func (parser *parser) expectOperation(amount1 Amount, operator tokenizer.TokenTy
 		}
 
 		// expect EOF
-		_, err = parser.nextToken(tokenizer.EOF)
+		_, err = parser.nextToken(tokens.EOF)
 		if err != nil {
 			return expression, err
 		}
@@ -115,7 +115,7 @@ func (parser *parser) expectOperation(amount1 Amount, operator tokenizer.TokenTy
 
 func (parser *parser) expectAmount() (Amount, error) {
 	var amount Amount
-	token, err := parser.nextToken(tokenizer.Number)
+	token, err := parser.nextToken(tokens.Number)
 	if err != nil {
 		return amount, err
 	}
@@ -133,7 +133,7 @@ func (parser *parser) expectAmount() (Amount, error) {
 }
 
 func (parser *parser) expectUnits() (units Units, err error) {
-	token, err := parser.nextToken(tokenizer.Units)
+	token, err := parser.nextToken(tokens.Units)
 	if err != nil {
 		return units, err
 	}
@@ -144,7 +144,7 @@ func (parser *parser) expectUnits() (units Units, err error) {
 	return units, nil
 }
 
-func (parser *parser) nextToken(expected tokenizer.TokenType) (token tokenizer.Token, err error) {
+func (parser *parser) nextToken(expected tokens.TokenType) (token tokens.Token, err error) {
 	// get the next token
 	token, err = parser.reader.ReadToken()
 	if err != nil {
@@ -152,14 +152,14 @@ func (parser *parser) nextToken(expected tokenizer.TokenType) (token tokenizer.T
 	}
 
 	// if the tokenizer raises an error, its an error
-	if token.TokenType == tokenizer.Error {
+	if token.TokenType == tokens.Error {
 		return token, fmt.Errorf(token.Value)
 	}
 
 	// if the token is not the right type, its an error
 	if expected != token.TokenType {
 		value := fmt.Sprintf("got '%s'", token.Value)
-		if token.TokenType == tokenizer.EOF {
+		if token.TokenType == tokens.EOF {
 			value = "reached end of input"
 		}
 		return token, fmt.Errorf("expected %s, but %s", expected, value)

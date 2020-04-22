@@ -2,6 +2,7 @@ package tokenizer
 
 import (
 	"fmt"
+	"github.com/nickwallen/toks/internal/tokens"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -26,7 +27,7 @@ type stateFn func(*tokenizer) stateFn
 
 // the interface used by the tokenizer to write tokens.
 type tokenWriter interface {
-	WriteToken(token Token) error
+	WriteToken(token tokens.Token) error
 	Close()
 }
 
@@ -48,11 +49,11 @@ func (tok *tokenizer) current() string {
 }
 
 // emits a Token to be consumed by the client
-func (tok *tokenizer) emit(tokenType TokenType) {
-	var token Token
+func (tok *tokenizer) emit(tokenType tokens.TokenType) {
+	var token tokens.Token
 	switch tokenType {
-	case EOF:
-		token = EOF.Token("")
+	case tokens.EOF:
+		token = tokens.EOF.Token("")
 	default:
 		token = tokenType.Token(tok.current())
 	}
@@ -142,8 +143,146 @@ func (tok *tokenizer) run() {
 }
 
 func (tok *tokenizer) error(format string, args ...interface{}) stateFn {
-	token := Token{TokenType: Error, Value: fmt.Sprintf(format, args...)}
+	token := tokens.Token{TokenType: tokens.Error, Value: fmt.Sprintf(format, args...)}
 	tok.writer.WriteToken(token)
 	// stop the tokenizer
 	return nil
+}
+
+// the state function expecting a number
+func expectNumber(tok *tokenizer) stateFn {
+	tok.ignoreSpaceRun()
+
+	// optional sign
+	tok.accept("+-")
+	tok.acceptRun(" ")
+
+	// expect decimal values
+	digits := "0123456789,"
+	decimal := true
+
+	leadZero := tok.accept("0")
+	if leadZero && tok.accept("xX") {
+		// expect hexadecimal values
+		digits = "0123456789ABCDEF"
+		decimal = false
+	}
+
+	// avoid leading commas
+	if tok.accept(",") {
+		tok.next()
+		return tok.error("expected number, but got '%s'", tok.current())
+	}
+
+	// accept a run of digits
+	count := tok.acceptRun(digits)
+
+	// validate that we have valid digits
+	invalidHex := !decimal && count <= 0
+	invalidDec := decimal && !leadZero && count <= 0
+	if invalidDec || invalidHex {
+		tok.next()
+		return tok.error("expected number, but got '%s'", tok.current())
+	}
+
+	// floating point number
+	if tok.accept(".") {
+		tok.acceptRun(digits)
+	}
+
+	// scientific notation
+	if tok.accept("eE") {
+		tok.accept("+-")
+		tok.acceptRun("0123456789")
+	}
+
+	// we have the number
+	tok.emit(tokens.Number)
+
+	// what is next?
+	tok.ignoreSpaceRun()
+	next := tok.peek()
+	switch {
+	case next == eofRune, next == '\n':
+		return expectEOF
+	case unicode.IsLetter(next):
+		return expectUnits
+	default:
+		return expectSymbol
+	}
+}
+
+// the state function where an EOF is expected
+func expectEOF(tok *tokenizer) stateFn {
+	tok.ignoreSpaceRun()
+	tok.ignoreRun('\n')
+	if tok.next() == eofRune {
+		tok.emit(tokens.EOF)
+		return nil
+	}
+	return tok.error("expected EOF, but got '%s'", tok.current())
+}
+
+// the state function where a symbol is expected
+func expectSymbol(tok *tokenizer) stateFn {
+	for {
+		switch next := tok.next(); {
+		case next == '+':
+			tok.emit(tokens.Plus)
+			return expectNumber
+		case next == '-':
+			tok.emit(tokens.Minus)
+			return expectNumber
+		case next == '*':
+			tok.emit(tokens.Multiply)
+			return expectNumber
+		case next == '/':
+			tok.emit(tokens.Divide)
+			return expectNumber
+		case unicode.IsSpace(next):
+			tok.ignore()
+		case next == eofRune:
+			tok.backup()
+			return expectEOF
+		default:
+			return tok.error("expected symbol, but got '%s'", tok.current())
+		}
+	}
+}
+
+// the state function where units are expected
+func expectUnits(tok *tokenizer) stateFn {
+	tok.ignoreSpaceRun()
+	count := tok.acceptLetterRun()
+	if count <= 0 {
+		tok.next()
+		return tok.error("expected units, but got '%s'", tok.current())
+	}
+	tok.emit(tokens.Units)
+
+	// what is next?
+	tok.ignoreSpaceRun()
+	switch {
+	case tok.accept("iI") && tok.accept("nN") && tok.accept(" "):
+		tok.backup()
+		tok.backup()
+		tok.backup()
+		return expectIn
+	case unicode.IsLetter(tok.peek()):
+		return expectUnits
+	default:
+		return expectSymbol
+	}
+}
+
+// the state function where 'in' is expected
+func expectIn(tok *tokenizer) stateFn {
+	tok.ignoreSpaceRun()
+	if tok.accept("iI") && tok.accept("nN") && tok.accept(" ") {
+		tok.emit(tokens.In)
+		return expectUnits
+	}
+	// error
+	tok.next()
+	return tok.error("expected 'in' keyword, but got '%s'", tok.current())
 }

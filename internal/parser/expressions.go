@@ -2,7 +2,7 @@ package parser
 
 import (
 	units "github.com/bcicen/go-units"
-	"github.com/nickwallen/toks/internal/tokenizer"
+	"github.com/nickwallen/toks/internal/tokens"
 )
 
 // Expression An Expression can be evaluated resulting in an Amount.
@@ -55,11 +55,11 @@ type operator struct {
 	left     Expression
 	right    Expression
 	units    Units
-	operator tokenizer.TokenType
+	operator tokens.TokenType
 }
 
 // operatorOf Create a new operator Expression.
-func operatorOf(left Expression, right Expression, units Units, op tokenizer.TokenType) operator {
+func operatorOf(left Expression, right Expression, units Units, op tokens.TokenType) operator {
 	return operator{left: left, right: right, units: units, operator: op}
 }
 
@@ -73,13 +73,13 @@ func (op operator) Evaluate() (Amount, error) {
 
 	// what operation will be performed?
 	switch op.operator {
-	case tokenizer.Plus:
+	case tokens.Plus:
 		operationFn = func(x float64, y float64) float64 { return x + y }
-	case tokenizer.Minus:
+	case tokens.Minus:
 		operationFn = func(x float64, y float64) float64 { return x - y }
-	case tokenizer.Multiply:
+	case tokens.Multiply:
 		operationFn = func(x float64, y float64) float64 { return x * y }
-	case tokenizer.Divide:
+	case tokens.Divide:
 		operationFn = func(x float64, y float64) float64 { return x / y }
 	}
 
