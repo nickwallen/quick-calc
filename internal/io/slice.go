@@ -12,13 +12,21 @@ type TokenSlice struct {
 }
 
 // NewTokenSlice Creates a new token slice.
-func NewTokenSlice(slice []tokens.Token) TokenSlice {
-	return TokenSlice{slice, 0}
+func NewTokenSlice(capacity int) TokenSlice {
+	return TokenSlice{
+		slice:    make([]tokens.Token, capacity),
+		position: 0,
+	}
 }
 
 // TokenSliceOf Create a new slice containing a set of tokens.
 func TokenSliceOf(input ...tokens.Token) TokenSlice {
 	return TokenSlice{slice: input, position: 0}
+}
+
+// Tokens Returns the slice of tokens.
+func (t *TokenSlice) Tokens() []tokens.Token {
+	return t.slice
 }
 
 // ReadToken Allows tokens to be read from a slice.
