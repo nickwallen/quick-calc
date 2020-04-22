@@ -109,8 +109,12 @@ var testCases = map[string][]tokens.Token{
 
 func TestTokens(t *testing.T) {
 	for input, expected := range testCases {
-		output := io.NewTokenSlice(len(expected))
-		Tokenize(input, &output)
-		assert.ElementsMatch(t, expected, output.Tokens())
+		output := io.NewTokenChannel()
+		go Tokenize(input, &output)
+		for _, expect := range expected {
+			actual, err := output.ReadToken()
+			assert.Nil(t, err)
+			assert.Equal(t, expect, actual)
+		}
 	}
 }
