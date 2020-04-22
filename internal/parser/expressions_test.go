@@ -11,6 +11,11 @@ func pounds() (pounds Units) {
 	return pounds
 }
 
+func noUnits() (none Units) {
+	none, _ = UnitsOf("none")
+	return none
+}
+
 func kilos() (kilos Units) {
 	kilos, _ = UnitsOf("kilograms")
 	return kilos

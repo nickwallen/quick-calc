@@ -8,7 +8,12 @@ import (
 
 // the interface used by the parser to read tokens
 type tokenReader interface {
+
+	// ReadToken Reads the next token.
 	ReadToken() (tokens.Token, error)
+
+	// UnreadToken Puts a token back so that it can be read again.
+	UnreadToken(tokens.Token) error
 }
 
 // Parse Parses a series of tokens and returns an expression.
@@ -28,16 +33,19 @@ func Parse(reader tokenReader) (Expression, error) {
 
 	// the next token defines if this is an operation or a conversion
 	switch token.TokenType {
-	case tokens.Plus, tokens.Minus, tokens.Multiply, tokens.Divide:
+	case tokens.Plus:
 		return expectOperation(reader, amount1, token.TokenType)
-
+	case tokens.Minus:
+		return expectOperation(reader, amount1, token.TokenType)
+	case tokens.Divide:
+		return expectOperation(reader, amount1, token.TokenType)
+	case tokens.Multiply:
+		return expectOperation(reader, amount1, token.TokenType)
 	case tokens.In:
 		return expectConversion(reader, amount1)
-
 	case tokens.EOF:
 		// all tokens have been consumed, all we have is the first amount
 		return amount1, nil
-
 	default:
 		// something bad happened because tokens remain that were not parsed
 		return expression, fmt.Errorf("parsing error on input '%s'", token.Value)
@@ -107,12 +115,7 @@ func expectOperation(reader tokenReader, amount1 Amount, operator tokens.TokenTy
 
 func expectAmount(reader tokenReader) (Amount, error) {
 	var amount Amount
-	token, err := nextToken(reader, tokens.Number)
-	if err != nil {
-		return amount, err
-	}
-	// TODO where to handle hexadecimal vs decimal?
-	number, err := strconv.ParseFloat(token.Value, 64)
+	number, err := expectNumber(reader)
 	if err != nil {
 		return amount, err
 	}
@@ -124,12 +127,39 @@ func expectAmount(reader tokenReader) (Amount, error) {
 	return expression, nil
 }
 
+func expectNumber(reader tokenReader) (float64, error) {
+	// TODO where to handle hexadecimal vs decimal?
+	var number float64
+	token, err := nextToken(reader, tokens.Number)
+	if err != nil {
+		return number, err
+	}
+	number, err = strconv.ParseFloat(token.Value, 64)
+	if err != nil {
+		return number, err
+	}
+	return number, nil
+}
+
 func expectUnits(reader tokenReader) (units Units, err error) {
-	token, err := nextToken(reader, tokens.Units)
+	var unitsName string
+
+	// the next token *might* define the units
+	token, err := reader.ReadToken()
 	if err != nil {
 		return units, err
 	}
-	units, err = UnitsOf(token.Value)
+
+	switch token.TokenType {
+	case tokens.Units:
+		unitsName = token.Value
+	default:
+		// no units defined. put back the token
+		unitsName = ""
+		reader.UnreadToken(token)
+	}
+
+	units, err = UnitsOf(unitsName)
 	if err != nil {
 		return units, err
 	}

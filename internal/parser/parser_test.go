@@ -8,7 +8,8 @@ import (
 )
 
 func TestParseAmount(t *testing.T) {
-	input := io.TokenSliceOf(tokens.Number.Token("23"), tokens.Units.Token("pounds"), tokens.EOF.Token(""))
+	input, err := io.TokenSliceOf(tokens.Number.Token("23"), tokens.Units.Token("pounds"), tokens.EOF.Token(""))
+	assert.Nil(t, err)
 	actual, err := Parse(&input)
 	expected := AmountOf(23, pounds())
 	assert.Equal(t, expected, actual)
@@ -16,19 +17,22 @@ func TestParseAmount(t *testing.T) {
 }
 
 func TestParseAmountNoUnits(t *testing.T) {
-	input := io.TokenSliceOf(tokens.Number.Token("23"), tokens.EOF.Token(""))
-	_, err := Parse(&input)
-	assert.Equal(t, "expected units, but reached end of input", err.Error())
+	input, err := io.TokenSliceOf(tokens.Number.Token("23"), tokens.EOF.Token(""))
+	assert.Nil(t, err)
+	actual, err := Parse(&input)
+	assert.Equal(t, AmountOf(23, noUnits()), actual)
+	assert.Nil(t, err)
 }
 
 func TestParseAmountNoNumber(t *testing.T) {
-	input := io.TokenSliceOf(tokens.Units.Token("pounds"), tokens.EOF.Token(""))
-	_, err := Parse(&input)
+	input, err := io.TokenSliceOf(tokens.Units.Token("pounds"), tokens.EOF.Token(""))
+	assert.Nil(t, err)
+	_, err = Parse(&input)
 	assert.Equal(t, "expected number, but got 'pounds'", err.Error())
 }
 
 func TestParseSum(t *testing.T) {
-	input := io.TokenSliceOf(
+	input, err := io.TokenSliceOf(
 		tokens.Number.Token("23"),
 		tokens.Units.Token("kg"),
 		tokens.Plus.Token("+"),
@@ -42,7 +46,7 @@ func TestParseSum(t *testing.T) {
 }
 
 func TestParseSubtract(t *testing.T) {
-	input := io.TokenSliceOf(
+	input, err := io.TokenSliceOf(
 		tokens.Number.Token("23"),
 		tokens.Units.Token("kg"),
 		tokens.Minus.Token("-"),
@@ -56,7 +60,7 @@ func TestParseSubtract(t *testing.T) {
 }
 
 func TestParseConversion(t *testing.T) {
-	input := io.TokenSliceOf(
+	input, err := io.TokenSliceOf(
 		tokens.Number.Token("2"),
 		tokens.Units.Token("pounds"),
 		tokens.In.Token("in"),
@@ -69,7 +73,7 @@ func TestParseConversion(t *testing.T) {
 }
 
 func TestParseSumAndConvert(t *testing.T) {
-	input := io.TokenSliceOf(
+	input, err := io.TokenSliceOf(
 		tokens.Number.Token("2"),
 		tokens.Units.Token("ounces"),
 		tokens.Plus.Token("+"),
@@ -85,7 +89,7 @@ func TestParseSumAndConvert(t *testing.T) {
 }
 
 func TestParseSubtractAndConvert(t *testing.T) {
-	input := io.TokenSliceOf(
+	input, err := io.TokenSliceOf(
 		tokens.Number.Token("2"),
 		tokens.Units.Token("pounds"),
 		tokens.Minus.Token("-"),

@@ -35,6 +35,12 @@ type Units struct {
 func UnitsOf(input string) (Units, error) {
 	var result Units
 
+	// an amount can be unit-less
+	if len(input) == 0 {
+		result.units = ""
+		return result, nil
+	}
+
 	// ensure that the Units are valid
 	unit, err := units.Find(input)
 	if err != nil {
