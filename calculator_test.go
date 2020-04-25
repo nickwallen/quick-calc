@@ -7,9 +7,10 @@ import (
 )
 
 var expressions = map[string]string{
-	"2 oz":                                "2.00 ounces",
-	"45 lbs":                              "45.00 pounds",
-	"2 kg + 2000g":                        "4.00 kilograms",
+	"2 oz":                                "2.00 oz",
+	"45 lbs":                              "45.00 lbs",
+	"2 kilograms in kg":                   "2.00 kilograms",
+	"2 kg + 2000g":                        "4.00 kg",
 	"2 kilograms + 2 kilograms":           "4.00 kilograms",
 	"2 pounds + 2 kilograms":              "6.41 pounds",
 	"2 feet - 2 feet":                     "0.00 feet",
@@ -20,6 +21,7 @@ var expressions = map[string]string{
 	"2kg + 34g in grams":                  "2034.00 grams",
 	"2 miles + 2 meters in feet":          "10566.56 feet",
 	"12 years in days":                    "4383.00 days",
+	"12 mmmH2O + 12 mmmH2O":               "24.00 mmmH2O",
 }
 
 func TestCalculator(t *testing.T) {

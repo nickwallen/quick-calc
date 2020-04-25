@@ -36,13 +36,13 @@ func UnitsOf(input string) (Units, error) {
 	var result Units
 
 	// ensure that the Units are valid
-	unit, err := units.Find(input)
+	_, err := units.Find(input)
 	if err != nil {
 		return result, err
 	}
 
 	// use a 'standard' name which may differ from what the user input
-	result.units = unit.PluralName()
+	result.units = input
 	return result, nil
 }
 
@@ -138,6 +138,12 @@ func (c unitConverter) Evaluate() (Amount, error) {
 	if err != nil {
 		return amount, err
 	}
+
+	// no conversion may be necessary; for example 2 kilograms in kg
+	if fromUnits.Name == toUnits.Name {
+		return AmountOf(c.from.Value, c.from.Units), nil
+	}
+
 	value, err := units.ConvertFloat(c.from.Value, fromUnits, toUnits)
 	if err != nil {
 		return amount, err

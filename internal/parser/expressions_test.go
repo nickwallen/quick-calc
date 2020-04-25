@@ -12,12 +12,12 @@ func pounds() (pounds Units) {
 }
 
 func kilos() (kilos Units) {
-	kilos, _ = UnitsOf("kilograms")
+	kilos, _ = UnitsOf("kg")
 	return kilos
 }
 
 func grams() (grams Units) {
-	grams, _ = UnitsOf("grams")
+	grams, _ = UnitsOf("g")
 	return grams
 }
 

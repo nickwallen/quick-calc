@@ -133,6 +133,18 @@ func (tok *tokenizer) acceptLetterRun() (count int) {
 	return count
 }
 
+// acceptLetterRun consumes a run of alphabetic characters
+func (tok *tokenizer) acceptAlphaNumRun() (count int) {
+	next := tok.next()
+	for unicode.IsLetter(next) || unicode.IsNumber(next) {
+		// keep consuming runes
+		next = tok.next()
+		count++
+	}
+	tok.backup()
+	return count
+}
+
 // run lexes the input by executing state functions until the state is nil
 func (tok *tokenizer) run() {
 	startState := tok.state
@@ -205,7 +217,7 @@ func expectNumber(tok *tokenizer) stateFn {
 	switch {
 	case next == eofRune, next == '\n':
 		return expectEOF
-	case unicode.IsLetter(next):
+	case unicode.IsLetter(next) || unicode.IsNumber(next):
 		return expectUnits
 	default:
 		return expectSymbol
@@ -253,7 +265,7 @@ func expectSymbol(tok *tokenizer) stateFn {
 // the state function where units are expected
 func expectUnits(tok *tokenizer) stateFn {
 	tok.ignoreSpaceRun()
-	count := tok.acceptLetterRun()
+	count := tok.acceptAlphaNumRun()
 	if count <= 0 {
 		tok.next()
 		return tok.error("expected units, but got '%s'", tok.current())
