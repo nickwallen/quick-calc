@@ -1,3 +1,6 @@
+TARGET = bin
+BINARY = qcalc
+
 all:
 	go build "./..."
 
@@ -5,10 +8,15 @@ test:
 	.githooks/pre-commit
 
 debug:
-	go run cmd/calc-cli/main.go debug
+	go run cmd/qcalc-cli/main.go debug
 
 run:
-	go run cmd/calc-cli/main.go
+	go run cmd/qcalc-cli/main.go
+
+binary:
+	mkdir $(TARGET)
+	go build -o $(TARGET)/$(BINARY) cmd/qcalc-cli/main.go
 
 clean:
-	go clean
+	go clean "./..."
+	rm -rf $(TARGET)

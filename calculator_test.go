@@ -1,7 +1,7 @@
-package toks_test
+package qcalc_test
 
 import (
-	"github.com/nickwallen/toks"
+	"github.com/nickwallen/qcalc"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -24,7 +24,7 @@ var expressions = map[string]string{
 
 func TestCalculator(t *testing.T) {
 	for expression, expected := range expressions {
-		actual, err := toks.Calculate(expression)
+		actual, err := qcalc.Calculate(expression)
 		assert.Equal(t, expected, actual)
 		assert.Nil(t, err)
 	}
@@ -37,7 +37,7 @@ var badExpressions = []string{
 
 func TestBadExpressions(t *testing.T) {
 	for _, expression := range badExpressions {
-		_, err := toks.Calculate(expression)
+		_, err := qcalc.Calculate(expression)
 		assert.NotNil(t, err)
 	}
 }

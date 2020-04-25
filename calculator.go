@@ -1,10 +1,10 @@
-package toks
+package qcalc
 
 import (
 	"fmt"
-	"github.com/nickwallen/toks/internal/io"
-	"github.com/nickwallen/toks/internal/parser"
-	"github.com/nickwallen/toks/internal/tokenizer"
+	"github.com/nickwallen/qcalc/internal/io"
+	"github.com/nickwallen/qcalc/internal/parser"
+	"github.com/nickwallen/qcalc/internal/tokenizer"
 )
 
 // Calculate Calculates the value of an input Expression.

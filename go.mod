@@ -1,4 +1,4 @@
-module github.com/nickwallen/toks
+module github.com/nickwallen/qcalc
 
 go 1.14
 

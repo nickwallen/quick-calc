@@ -1,8 +1,8 @@
 package parser
 
 import (
-	units "github.com/bcicen/go-units"
-	"github.com/nickwallen/toks/internal/tokens"
+	"github.com/bcicen/go-units"
+	"github.com/nickwallen/qcalc/internal/tokens"
 )
 
 // Expression An Expression can be evaluated resulting in an Amount.
