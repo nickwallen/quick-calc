@@ -17,6 +17,9 @@ binary:
 	mkdir $(TARGET)
 	go build -o $(TARGET)/$(BINARY) cmd/qcalc-cli/main.go
 
+samples:
+	go run cmd/qcalc-gen/main.go 
+
 clean:
 	go clean "./..."
 	rm -rf $(TARGET)
