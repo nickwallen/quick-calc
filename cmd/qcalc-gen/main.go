@@ -19,7 +19,7 @@ func main() {
 	}
 
 	// second arg is the number of samples
-	numSamples := 1_000_000
+	numSamples := 100_000
 	if len(os.Args) > 2 {
 		parsedInt, err := strconv.ParseInt(os.Args[2], 10, 32)
 		if err != nil {
@@ -28,42 +28,51 @@ func main() {
 		numSamples = int(parsedInt)
 	}
 
+	numProducers := 1000
 	start := time.Now()
-	numWorkers := 10
 	samples := make(chan string)
-	done := make(chan bool)
+	done := make(chan int)
 
 	// the consumer writes the samples to a file
 	go consumer(numSamples, outputPath, samples, done)
+	numWritten := waitForProducers(numProducers, samples, done)
 
-	// the producers generate the samples
-	var wg sync.WaitGroup
-	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go producer(samples, done, &wg)
-	}
-
-	// wait for the generators to complete
-	wg.Wait()
-	elapsed := time.Since(start)
-	fmt.Printf("\nWrote %d samples to '%s' with %d workers in %s.\n",
-		numSamples, outputPath, numWorkers, elapsed)
+	fmt.Printf("\nWrote %d/%d samples to '%s' with %d producer(s) in %s.\n",
+		numWritten, numSamples, outputPath, numProducers, time.Since(start))
 }
 
-func producer(output chan<- string, done <-chan bool, wg *sync.WaitGroup) {
-	// signals to main when the worker is done
-	defer wg.Done()
+func waitForProducers(numWorkers int, samples chan string, done chan int) (numSamples int) {
+	var wg sync.WaitGroup
+	defer wg.Wait() // wait for the producers to complete
+
+	// launch the workers
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			producer(samples, done)
+		}()
+	}
+
+	// wait for the consumer to tell us how many were written
+	numSamples = <-done
+	return numSamples
+}
+
+func producer(output chan<- string, done <-chan int) {
 	for {
-		sample := generateSample()
 		select {
-		case output <- sample:
+		case output <- generateSample():
 		case <-done:
-			return // our work here is done
+			return // channel closed; consumer has enough samples
 		}
 	}
 }
 
-func consumer(numSamples int, outputPath string, input <-chan string, done chan<- bool) {
+func consumer(numSamples int, outputPath string, input <-chan string, done chan<- int) {
+	// signal to the producers that the consumer is done
+	defer close(done)
+
 	// open the file
 	file, err := os.Create(outputPath)
 	defer file.Close()
@@ -71,28 +80,30 @@ func consumer(numSamples int, outputPath string, input <-chan string, done chan<
 		panic("Unable to open output file: " + outputPath)
 	}
 
-	for i := 0; i < numSamples; i++ {
+	// consume the samples and write to disk
+	i := 0
+	defer func() { done <- i }()
+	for ; i < numSamples; i++ {
 		sample := <-input
-		fmt.Fprintf(file, "%s \n", sample)
+		_, err := fmt.Fprintf(file, "%s \n", sample)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 	}
-
-	// signal to the producers that nothing more is needed
-	close(done)
 }
 
 func generateSample() string {
-	input := randInput()
-	result, err := qcalc.Calculate(input)
-
-	var output string
-	if err != nil && rand.Intn(100) < 20 {
-		output = err.Error()
-	} else {
-		output = result
+	for {
+		input := randInput()
+		output, err := qcalc.Calculate(input)
+		if err == nil {
+			// we have a good sample!
+			sample := fmt.Sprintf("\"%s\", \"%s\"", input, output)
+			return sample
+		}
+		// an invalid expression was generated like 1 meter + 3 pounds
 	}
-
-	// write the sample to the output
-	return fmt.Sprintf("\"%s\", \"%s\"", input, output)
 }
 
 func randInput() (input string) {
