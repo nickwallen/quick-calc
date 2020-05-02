@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"github.com/nickwallen/qcalc/internal/tokens"
+	"github.com/nickwallen/quick-calc/internal/tokens"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

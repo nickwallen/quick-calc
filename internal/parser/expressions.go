@@ -2,7 +2,7 @@ package parser
 
 import (
 	"github.com/bcicen/go-units"
-	"github.com/nickwallen/qcalc/internal/tokens"
+	"github.com/nickwallen/quick-calc/internal/tokens"
 )
 
 // Expression An Expression can be evaluated resulting in an Amount.

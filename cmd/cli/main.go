@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/nickwallen/qcalc"
-	"github.com/nickwallen/qcalc/internal/io"
-	"github.com/nickwallen/qcalc/internal/tokenizer"
+	calc "github.com/nickwallen/quick-calc"
+	"github.com/nickwallen/quick-calc/internal/io"
+	"github.com/nickwallen/quick-calc/internal/tokenizer"
 	"os"
 )
 
@@ -34,7 +34,7 @@ func tokenize(input string, writer outputWriter) {
 
 // calculate the value of each expression
 func calculate(input string, writer outputWriter) {
-	result, err := qcalc.Calculate(input)
+	result, err := calc.Calculate(input)
 	if err != nil {
 		fmt.Printf("%s \n", err)
 		return

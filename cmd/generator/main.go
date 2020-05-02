@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bcicen/go-units"
-	"github.com/nickwallen/qcalc"
+	calc "github.com/nickwallen/quick-calc"
 	"math/rand"
 	"os"
 	"strconv"
@@ -96,7 +96,7 @@ func consumer(numSamples int, outputPath string, input <-chan string, done chan<
 func generateSample() string {
 	for {
 		input := randInput()
-		output, err := qcalc.Calculate(input)
+		output, err := calc.Calculate(input)
 		if err == nil {
 			// we have a good sample!
 			sample := fmt.Sprintf("\"%s\", \"%s\"", input, output)

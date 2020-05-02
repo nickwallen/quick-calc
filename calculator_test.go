@@ -1,7 +1,7 @@
-package qcalc_test
+package calc_test
 
 import (
-	"github.com/nickwallen/qcalc"
+	"github.com/nickwallen/quick-calc"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -26,7 +26,7 @@ var expressions = map[string]string{
 
 func TestCalculator(t *testing.T) {
 	for expression, expected := range expressions {
-		actual, err := qcalc.Calculate(expression)
+		actual, err := calc.Calculate(expression)
 		assert.Equal(t, expected, actual)
 		assert.Nil(t, err)
 	}
@@ -39,7 +39,7 @@ var badExpressions = []string{
 
 func TestBadExpressions(t *testing.T) {
 	for _, expression := range badExpressions {
-		_, err := qcalc.Calculate(expression)
+		_, err := calc.Calculate(expression)
 		assert.NotNil(t, err)
 	}
 }

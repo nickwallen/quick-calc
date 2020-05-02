@@ -2,7 +2,7 @@ package io
 
 import (
 	"fmt"
-	"github.com/nickwallen/qcalc/internal/tokens"
+	"github.com/nickwallen/quick-calc/internal/tokens"
 )
 
 // TokenChannel Enables tokens to be read from and written to a channel.

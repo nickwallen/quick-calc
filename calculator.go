@@ -1,10 +1,10 @@
-package qcalc
+package calc
 
 import (
 	"fmt"
-	"github.com/nickwallen/qcalc/internal/io"
-	"github.com/nickwallen/qcalc/internal/parser"
-	"github.com/nickwallen/qcalc/internal/tokenizer"
+	"github.com/nickwallen/quick-calc/internal/io"
+	"github.com/nickwallen/quick-calc/internal/parser"
+	"github.com/nickwallen/quick-calc/internal/tokenizer"
 )
 
 // Calculate Calculates the value of an input Expression.

@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"github.com/nickwallen/qcalc/internal/tokens"
+	"github.com/nickwallen/quick-calc/internal/tokens"
 	"strconv"
 )
 

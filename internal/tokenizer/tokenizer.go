@@ -2,7 +2,7 @@ package tokenizer
 
 import (
 	"fmt"
-	"github.com/nickwallen/qcalc/internal/tokens"
+	"github.com/nickwallen/quick-calc/internal/tokens"
 	"strings"
 	"unicode"
 	"unicode/utf8"
