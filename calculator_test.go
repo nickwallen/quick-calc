@@ -1,6 +1,7 @@
 package calc_test
 
 import (
+	"fmt"
 	"github.com/nickwallen/quick-calc"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -24,10 +25,19 @@ var expressions = map[string]string{
 	"12 mmmH2O + 12 mmmH2O":               "24.00 mmmH2O",
 }
 
-func TestCalculator(t *testing.T) {
+func TestCalculate(t *testing.T) {
 	for expression, expected := range expressions {
 		actual, err := calc.Calculate(expression)
 		assert.Equal(t, expected, actual)
+		assert.Nil(t, err)
+	}
+}
+
+func TestCalculateAmount(t *testing.T) {
+	for expression, expected := range expressions {
+		actual, err := calc.CalculateAmount(expression)
+		actualStr := fmt.Sprintf("%.2f %s", actual.Value, actual.Units)
+		assert.Equal(t, expected, actualStr)
 		assert.Nil(t, err)
 	}
 }
@@ -37,7 +47,7 @@ var badExpressions = []string{
 	"32 googles",
 }
 
-func TestBadExpressions(t *testing.T) {
+func TestCalculateBadExpr(t *testing.T) {
 	for _, expression := range badExpressions {
 		_, err := calc.Calculate(expression)
 		assert.NotNil(t, err)
