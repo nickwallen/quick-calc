@@ -15,7 +15,7 @@ func TestParseAmount(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := AmountOf(23, pounds())
+	expected := valueExpr(23, pounds())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
@@ -51,7 +51,7 @@ func TestParseSum(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := operatorOf(AmountOf(23, kilos()), AmountOf(23, pounds()), kilos(), tokens.Plus)
+	expected := binaryExpr(valueExpr(23, kilos()), valueExpr(23, pounds()), kilos(), tokens.Plus)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
@@ -67,7 +67,7 @@ func TestParseSubtract(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := operatorOf(AmountOf(23, kilos()), AmountOf(23, pounds()), kilos(), tokens.Minus)
+	expected := binaryExpr(valueExpr(23, kilos()), valueExpr(23, pounds()), kilos(), tokens.Minus)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
@@ -82,7 +82,7 @@ func TestParseConversion(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := unitConverterOf(AmountOf(2, pounds()), ounces())
+	expected := conversion(valueExpr(2, pounds()), ounces())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
@@ -100,7 +100,7 @@ func TestParseSumAndConvert(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := operatorOf(AmountOf(2, ounces()), AmountOf(2, pounds()), pounds(), tokens.Plus)
+	expected := binaryExpr(valueExpr(2, ounces()), valueExpr(2, pounds()), pounds(), tokens.Plus)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
@@ -118,7 +118,22 @@ func TestParseSubtractAndConvert(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := operatorOf(AmountOf(2, pounds()), AmountOf(2, ounces()), ounces(), tokens.Minus)
+	expected := binaryExpr(valueExpr(2, pounds()), valueExpr(2, ounces()), ounces(), tokens.Minus)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
+}
+
+func pounds() (pounds Units) {
+	pounds, _ = UnitsOf("pounds")
+	return pounds
+}
+
+func kilos() (kilos Units) {
+	kilos, _ = UnitsOf("kg")
+	return kilos
+}
+
+func ounces() (ounces Units) {
+	ounces, _ = UnitsOf("ounces")
+	return ounces
 }

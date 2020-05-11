@@ -11,12 +11,12 @@ type tokenReader interface {
 	ReadToken() (tokens.Token, error)
 }
 
-// Parse Parses a series of tokens and returns an expression.
+// Parse a series of tokens and returns an expression.
 func Parse(reader tokenReader) (Expression, error) {
 	var expression Expression
 
 	// an expression should start with an Amount like '23 pounds'
-	amount1, err := expectAmount(reader)
+	value1, err := expectValue(reader)
 	if err != nil {
 		return expression, err
 	}
@@ -29,14 +29,14 @@ func Parse(reader tokenReader) (Expression, error) {
 	// the next token defines if this is an operation or a conversion
 	switch token.TokenType {
 	case tokens.Plus, tokens.Minus, tokens.Multiply, tokens.Divide:
-		return expectOperation(reader, amount1, token.TokenType)
+		return expectOperation(reader, value1, token.TokenType)
 
 	case tokens.In:
-		return expectConversion(reader, amount1)
+		return expectConversion(reader, value1)
 
 	case tokens.EOF:
-		// all tokens have been consumed, all we have is the first amount
-		return amount1, nil
+		// all tokens have been consumed, all we have is the first value
+		return value1, nil
 
 	default:
 		// something bad happened because tokens remain that were not parsed
@@ -44,10 +44,10 @@ func Parse(reader tokenReader) (Expression, error) {
 	}
 }
 
-func expectConversion(reader tokenReader, amount1 Amount) (Expression, error) {
+func expectConversion(reader tokenReader, from Expression) (Expression, error) {
 	var expression Expression
 
-	// expect the Units to convert to
+	// expect the units to convert to
 	units, err := expectUnits(reader)
 	if err != nil {
 		return expression, err
@@ -60,15 +60,15 @@ func expectConversion(reader tokenReader, amount1 Amount) (Expression, error) {
 	}
 
 	// success
-	return unitConverterOf(amount1, units), nil
+	return conversion(from, units), nil
 }
 
-func expectOperation(reader tokenReader, amount1 Amount, operator tokens.TokenType) (Expression, error) {
+func expectOperation(reader tokenReader, value1 Expression, operator tokens.TokenType) (Expression, error) {
 	// to this point, we've already seen... operand1 +
 	var expression Expression
 
 	// expect the second operand
-	amount2, err := expectAmount(reader)
+	value2, err := expectValue(reader)
 	if err != nil {
 		return expression, err
 	}
@@ -81,11 +81,11 @@ func expectOperation(reader tokenReader, amount1 Amount, operator tokens.TokenTy
 	// what units should the result be in?
 	switch token.TokenType {
 	case tokens.EOF:
-		// success; default to Units of the first operand for expressions like '2 kg + 2 g'
-		return operatorOf(amount1, amount2, amount1.Units, operator), nil
+		// success; default to TargetUnits of the first operand for expressions like '2 kg + 2 g'
+		return binaryExpr(value1, value2, value1.TargetUnits, operator), nil
 
 	case tokens.In:
-		// the Units have been specified for expressions like '2 kg + 2 g in grams'
+		// the TargetUnits have been specified for expressions like '2 kg + 2 g in grams'
 		units, err := expectUnits(reader)
 		if err != nil {
 			return expression, err
@@ -98,30 +98,30 @@ func expectOperation(reader tokenReader, amount1 Amount, operator tokens.TokenTy
 		}
 
 		// success
-		return operatorOf(amount1, amount2, units, operator), nil
+		return binaryExpr(value1, value2, units, operator), nil
 
 	default:
 		return expression, fmt.Errorf("parsing error on unexpected input '%s'", token.Value)
 	}
 }
 
-func expectAmount(reader tokenReader) (Amount, error) {
-	var amount Amount
+func expectValue(reader tokenReader) (Expression, error) {
+	var expr Expression
 	token, err := nextToken(reader, tokens.Number)
 	if err != nil {
-		return amount, err
+		return expr, err
 	}
 	// TODO where to handle hexadecimal vs decimal?
 	number, err := strconv.ParseFloat(token.Value, 64)
 	if err != nil {
-		return amount, err
+		return expr, err
 	}
 	units, err := expectUnits(reader)
 	if err != nil {
-		return amount, err
+		return expr, err
 	}
-	expression := AmountOf(number, units)
-	return expression, nil
+	expr = valueExpr(number, units)
+	return expr, nil
 }
 
 func expectUnits(reader tokenReader) (units Units, err error) {
