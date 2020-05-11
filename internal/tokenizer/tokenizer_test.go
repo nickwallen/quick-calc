@@ -489,6 +489,17 @@ var testCases = map[string][]tokens.Token{
 		tokens.Units.Token("kg"),
 		tokens.EOF.Token(""),
 	},
+	"2 oz + 3 oz + 4 oz": {
+		tokens.Number.Token("2"),
+		tokens.Units.Token("oz"),
+		tokens.Plus.Token("+"),
+		tokens.Number.Token("3"),
+		tokens.Units.Token("oz"),
+		tokens.Plus.Token("+"),
+		tokens.Number.Token("4"),
+		tokens.Units.Token("oz"),
+		tokens.EOF.Token(""),
+	},
 }
 
 func TestTokens(t *testing.T) {
