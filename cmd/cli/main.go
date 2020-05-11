@@ -23,7 +23,7 @@ type outputWriter interface {
 	Write(p []byte) (n int, err error)
 }
 
-// tokenize the input string
+// tokenize the input string.
 func tokenize(input string, writer outputWriter) {
 	output := io.NewTokenChannel()
 	go tokenizer.Tokenize(input, output)
@@ -32,7 +32,7 @@ func tokenize(input string, writer outputWriter) {
 	}
 }
 
-// calculate the value of each expression
+// calculate the value of the input.
 func calculate(input string, writer outputWriter) {
 	result, err := calc.Calculate(input)
 	if err != nil {

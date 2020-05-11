@@ -42,10 +42,11 @@ func main() {
 }
 
 func waitForProducers(numWorkers int, samples chan string, done chan int) (numSamples int) {
+	// wait for the producers to complete
 	var wg sync.WaitGroup
-	defer wg.Wait() // wait for the producers to complete
+	defer wg.Wait()
 
-	// launch the workers
+	// launch the producers
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func() {
@@ -53,7 +54,6 @@ func waitForProducers(numWorkers int, samples chan string, done chan int) (numSa
 			producer(samples, done)
 		}()
 	}
-
 	// wait for the consumer to tell us how many were written
 	numSamples = <-done
 	return numSamples

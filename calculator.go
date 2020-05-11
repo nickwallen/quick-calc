@@ -17,29 +17,22 @@ type Amount struct {
 // Calculate evaluates an input expression and returns the value as a string.
 func Calculate(input string) (string, error) {
 	var result string
-	amount, err := CalculateAmount(input)
+	amt, err := CalculateAmount(input)
 	if err != nil {
 		return result, fmt.Errorf("execution error: %s", err.Error())
 	}
-	result = fmt.Sprintf("%.2f %s", amount.Value, amount.Units)
+	result = fmt.Sprintf("%.2f %s", amt.Value, amt.Units)
 	return result, nil
 }
 
 // CalculateAmount evaluates an input expression and returns an Amount object.
-func CalculateAmount(input string) (Amount, error) {
-	var amount Amount
-
-	// the tokenizer runs in the background populating the token channel
+func CalculateAmount(input string) (amt Amount, err error) {
 	tokens := io.NewTokenChannel()
 	go tokenizer.Tokenize(input, tokens)
-
-	// parse the tokens
 	expr, err := parser.Parse(tokens)
 	if err != nil {
-		return amount, fmt.Errorf("parse error: %s", err.Error())
+		return amt, fmt.Errorf("parse error: %s", err.Error())
 	}
-
-	// eval the expression
 	return eval(&expr)
 }
 
@@ -50,107 +43,88 @@ func eval(expr *parser.Expression) (Amount, error) {
 	case parser.PlusOp:
 		opFunc := func(l float64, r float64) float64 { return l + r }
 		return evalBinaryExpr(opFunc, expr)
-
 	case parser.MinusOp:
 		opFunc := func(l float64, r float64) float64 { return l - r }
 		return evalBinaryExpr(opFunc, expr)
-
 	case parser.ValueOp:
 		return evalValue(expr)
-
 	case parser.ConvertOp:
 		return evalConversion(expr)
-
 	default:
-		var amount Amount
-		return amount, fmt.Errorf("unsupported op: '%s'", expr.Op)
+		var amt Amount
+		return amt, fmt.Errorf("unsupported op: '%s'", expr.Op)
 	}
 }
 
-func evalBinaryExpr(opFunc opFunction, expr *parser.Expression) (amount Amount, err error) {
+func evalBinaryExpr(opFunc opFunction, expr *parser.Expression) (amt Amount, err error) {
 	left, err := eval(expr.Left)
 	if err != nil {
-		return amount, err
+		return amt, err
 	}
-
 	right, err := eval(expr.Right)
 	if err != nil {
-		return amount, err
+		return amt, err
 	}
-
-	// unit conversion, if necessary
 	if left.Units != expr.TargetUnits.String() {
-		left, err = convert(left, expr.TargetUnits)
+		left, err = convertUnits(left, expr.TargetUnits)
 		if err != nil {
-			return amount, err
+			return amt, err
 		}
 	}
-
-	// unit conversion, if necessary
 	if right.Units != expr.TargetUnits.String() {
-		right, err = convert(right, expr.TargetUnits)
+		right, err = convertUnits(right, expr.TargetUnits)
 		if err != nil {
-			return amount, err
+			return amt, err
 		}
 	}
-
 	result := Amount{opFunc(left.Value, right.Value), left.Units}
 	return result, nil
 }
 
 func evalValue(expr *parser.Expression) (Amount, error) {
-	amount := Amount{expr.Value, expr.ValueUnits.String()}
-
-	// unit conversion, if necessary
+	amt := Amount{expr.Value, expr.ValueUnits.String()}
 	if expr.ValueUnits != expr.TargetUnits {
-		amount, err := convert(amount, expr.TargetUnits)
+		amt, err := convertUnits(amt, expr.TargetUnits)
 		if err != nil {
-			return amount, err
+			return amt, err
 		}
 	}
-	return amount, nil
+	return amt, nil
 }
 
-func evalConversion(expr *parser.Expression) (amount Amount, err error) {
-	//amount := Amount{expr.Value, expr.ValueUnits.String()}
-	amount, err = eval(expr.Left)
+func evalConversion(expr *parser.Expression) (amt Amount, err error) {
+	amt, err = eval(expr.Left)
 	if err != nil {
-		return amount, err
+		return amt, err
 	}
-
-	// unit conversion, if necessary
-	if amount.Units != expr.TargetUnits.String() {
-		amount, err = convert(amount, expr.TargetUnits)
+	if amt.Units != expr.TargetUnits.String() {
+		amt, err = convertUnits(amt, expr.TargetUnits)
 		if err != nil {
-			return amount, err
+			return amt, err
 		}
 	}
-	return amount, nil
+	return amt, nil
 }
 
-func convert(from Amount, units parser.Units) (Amount, error) {
-	var amount Amount
+func convertUnits(from Amount, units parser.Units) (Amount, error) {
+	var amt Amount
 	fromUnits, err := u.Find(from.Units)
 	if err != nil {
-		return amount, err
+		return amt, err
 	}
-
 	toUnits, err := u.Find(units.String())
 	if err != nil {
-		return amount, err
+		return amt, err
 	}
-
 	// no conversion may be necessary; for example 2 kilograms in kg
 	if fromUnits.Name == toUnits.Name {
-		amount = Amount{from.Value, units.String()}
-		return amount, nil
+		amt = Amount{from.Value, units.String()}
+		return amt, nil
 	}
-
 	value, err := u.ConvertFloat(from.Value, fromUnits, toUnits)
 	if err != nil {
-		return amount, err
+		return amt, err
 	}
-
-	amount = Amount{value.Float(), units.String()}
-	return amount, nil
+	amt = Amount{value.Float(), units.String()}
+	return amt, nil
 }
