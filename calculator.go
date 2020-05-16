@@ -116,8 +116,8 @@ func convertUnits(from Amount, units parser.Units) (Amount, error) {
 	if err != nil {
 		return amt, err
 	}
-	// no conversion may be necessary; for example 2 kilograms in kg
 	if fromUnits.Name == toUnits.Name {
+		// no conversion is necessary; for example 2 kilograms in kg requires no conversion
 		amt = Amount{from.Value, units.String()}
 		return amt, nil
 	}

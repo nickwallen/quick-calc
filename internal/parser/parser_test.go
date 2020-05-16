@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestParseAmount(t *testing.T) {
+func TestParseValue(t *testing.T) {
 	input := io.NewTokenChannel()
 	go func() {
 		input.WriteToken(tokens.Number.Token("23"))
@@ -20,7 +20,7 @@ func TestParseAmount(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestParseAmountNoUnits(t *testing.T) {
+func TestParseValueNoUnits(t *testing.T) {
 	input := io.NewTokenChannel()
 	go func() {
 		input.WriteToken(tokens.Number.Token("23"))
@@ -30,7 +30,7 @@ func TestParseAmountNoUnits(t *testing.T) {
 	assert.Equal(t, "expected units, but reached end of input", err.Error())
 }
 
-func TestParseAmountNoNumber(t *testing.T) {
+func TestParseValueNoNumber(t *testing.T) {
 	input := io.NewTokenChannel()
 	go func() {
 		input.WriteToken(tokens.Units.Token("pounds"))
@@ -40,7 +40,7 @@ func TestParseAmountNoNumber(t *testing.T) {
 	assert.Equal(t, "expected number, but got 'pounds'", err.Error())
 }
 
-func TestParseSum(t *testing.T) {
+func TestParseBinaryAdd(t *testing.T) {
 	input := io.NewTokenChannel()
 	go func() {
 		input.WriteToken(tokens.Number.Token("23"))
@@ -51,12 +51,16 @@ func TestParseSum(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := binaryExpr(valueExpr(23, kilos()), valueExpr(23, pounds()), kilos(), tokens.Plus)
+	expected := binaryExpr(
+		tokens.Plus,
+		valueExpr(23, kilos()),
+		valueExpr(23, pounds()),
+		kilos())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
-func TestParseSubtract(t *testing.T) {
+func TestParseBinarySubtract(t *testing.T) {
 	input := io.NewTokenChannel()
 	go func() {
 		input.WriteToken(tokens.Number.Token("23"))
@@ -67,7 +71,11 @@ func TestParseSubtract(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := binaryExpr(valueExpr(23, kilos()), valueExpr(23, pounds()), kilos(), tokens.Minus)
+	expected := binaryExpr(
+		tokens.Minus,
+		valueExpr(23, kilos()),
+		valueExpr(23, pounds()),
+		kilos())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
@@ -87,7 +95,7 @@ func TestParseConversion(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestParseSumAndConvert(t *testing.T) {
+func TestParseBinarySumAndConvert(t *testing.T) {
 	input := io.NewTokenChannel()
 	go func() {
 		input.WriteToken(tokens.Number.Token("2"))
@@ -100,12 +108,16 @@ func TestParseSumAndConvert(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := binaryExpr(valueExpr(2, ounces()), valueExpr(2, pounds()), pounds(), tokens.Plus)
+	expected := binaryExpr(
+		tokens.Plus,
+		valueExpr(2, ounces()),
+		valueExpr(2, pounds()),
+		pounds())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
-func TestParseSubtractAndConvert(t *testing.T) {
+func TestParseBinarySubtractAndConvert(t *testing.T) {
 	input := io.NewTokenChannel()
 	go func() {
 		input.WriteToken(tokens.Number.Token("2"))
@@ -118,7 +130,72 @@ func TestParseSubtractAndConvert(t *testing.T) {
 		input.WriteToken(tokens.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := binaryExpr(valueExpr(2, pounds()), valueExpr(2, ounces()), ounces(), tokens.Minus)
+	expected := binaryExpr(
+		tokens.Minus,
+		valueExpr(2, pounds()),
+		valueExpr(2, ounces()),
+		ounces())
+	assert.Equal(t, expected, actual)
+	assert.Nil(t, err)
+}
+
+func TestParseSum(t *testing.T) {
+	input := io.NewTokenChannel()
+	go func() {
+		input.WriteToken(tokens.Number.Token("2"))
+		input.WriteToken(tokens.Units.Token("ounces"))
+		input.WriteToken(tokens.Plus.Token("+"))
+		input.WriteToken(tokens.Number.Token("3"))
+		input.WriteToken(tokens.Units.Token("ounces"))
+		input.WriteToken(tokens.Plus.Token("+"))
+		input.WriteToken(tokens.Number.Token("4"))
+		input.WriteToken(tokens.Units.Token("ounces"))
+		input.WriteToken(tokens.EOF.Token(""))
+	}()
+	actual, err := Parse(&input)
+	expected := binaryExpr(
+		tokens.Plus,
+		valueExpr(2, ounces()),
+		binaryExpr(
+			tokens.Plus,
+			valueExpr(3, ounces()),
+			valueExpr(4, ounces()),
+			ounces()),
+		ounces())
+	assert.Equal(t, expected, actual)
+	assert.Nil(t, err)
+}
+
+func TestParseSum2(t *testing.T) {
+	input := io.NewTokenChannel()
+	go func() {
+		input.WriteToken(tokens.Number.Token("2"))
+		input.WriteToken(tokens.Units.Token("ounces"))
+		input.WriteToken(tokens.Plus.Token("+"))
+		input.WriteToken(tokens.Number.Token("3"))
+		input.WriteToken(tokens.Units.Token("ounces"))
+		input.WriteToken(tokens.Plus.Token("-"))
+		input.WriteToken(tokens.Number.Token("4"))
+		input.WriteToken(tokens.Units.Token("ounces"))
+		input.WriteToken(tokens.Plus.Token("+"))
+		input.WriteToken(tokens.Number.Token("5"))
+		input.WriteToken(tokens.Units.Token("ounces"))
+		input.WriteToken(tokens.EOF.Token(""))
+	}()
+	actual, err := Parse(&input)
+	expected := binaryExpr(
+		tokens.Plus,
+		valueExpr(2, ounces()),
+		binaryExpr(
+			tokens.Plus,
+			valueExpr(3, ounces()),
+			binaryExpr(
+				tokens.Plus,
+				valueExpr(4, ounces()),
+				valueExpr(5, ounces()),
+				ounces()),
+			ounces()),
+		ounces())
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }

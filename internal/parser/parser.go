@@ -62,9 +62,13 @@ func expectOperation(reader tokenReader, value1 Expression, operator tokens.Toke
 	}
 	// what units should the result be in?
 	switch token.TokenType {
-	case tokens.EOF:
-		// success; default to the units of the first operand, for example '2 kg + 2 g'
-		return binaryExpr(value1, value2, value1.TargetUnits, operator), nil
+	case tokens.Plus, tokens.Minus, tokens.Multiply, tokens.Divide:
+		// the operation has more operands
+		right, err := expectOperation(reader, value2, token.TokenType)
+		if err != nil {
+			return expr, err
+		}
+		return binaryExpr(operator, value1, right, value1.TargetUnits), nil
 	case tokens.In:
 		// the units have been specified, for example '2 kg + 2 g in grams'
 		units, err := expectUnits(reader)
@@ -76,7 +80,10 @@ func expectOperation(reader tokenReader, value1 Expression, operator tokens.Toke
 		if err != nil {
 			return expr, err
 		}
-		return binaryExpr(value1, value2, units, operator), nil
+		return binaryExpr(operator, value1, value2, units), nil
+	case tokens.EOF:
+		// operation complete; default to the units of the first operand, for example '2 kg + 2 g'
+		return binaryExpr(operator, value1, value2, value1.TargetUnits), nil
 	default:
 		return expr, fmt.Errorf("parsing error on unexpected input '%s'", token.Value)
 	}

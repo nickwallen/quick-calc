@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"github.com/bcicen/go-units"
 	"github.com/nickwallen/quick-calc/internal/tokens"
 )
@@ -16,21 +17,27 @@ type Expression struct {
 	ValueUnits  Units
 }
 
+func (e Expression) String() string {
+	switch e.Op {
+	case ValueOp:
+		return fmt.Sprintf("[%.2f %s]", e.Value, e.ValueUnits)
+	case ConvertOp:
+		return fmt.Sprintf("[%s] -> [%s]", e.Left, e.TargetUnits)
+	default:
+		return fmt.Sprintf("%s (%v, %v) in %s", e.Op, e.Left, e.Right, e.TargetUnits)
+	}
+}
+
 // Operator The operator of an expression, like + for addition.
 type Operator string
 
+// Operator types
 const (
-	// PlusOp signifies binary addition.
-	PlusOp Operator = "+"
-
-	// MinusOp signifies binary subtraction.
-	MinusOp Operator = "-"
-
-	// ConvertOp signifies conversion between different units of measure.
+	Noop      Operator = ""
+	PlusOp    Operator = "+"
+	MinusOp   Operator = "-"
 	ConvertOp Operator = "->"
-
-	// ValueOp signifies a known, fixed valueExpr.
-	ValueOp Operator = "="
+	ValueOp   Operator = "="
 )
 
 // Units are a measure of a physical property.
@@ -58,7 +65,7 @@ func (units Units) String() string {
 }
 
 // binaryExpr Create an expression where two values are acted on by an operator.
-func binaryExpr(left Expression, right Expression, units Units, opType tokens.TokenType) Expression {
+func binaryExpr(opType tokens.TokenType, left Expression, right Expression, units Units) Expression {
 	var op Operator
 	switch opType {
 	case tokens.Plus:

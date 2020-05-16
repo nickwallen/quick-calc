@@ -23,6 +23,7 @@ var expressions = map[string]string{
 	"2 miles + 2 meters in feet":          "10566.56 feet",
 	"12 years in days":                    "4383.00 days",
 	"12 mmmH2O + 12 mmmH2O":               "24.00 mmmH2O",
+	"2 oz + 3 oz + 4 oz + 5 oz":           "14.00 oz",
 }
 
 func TestCalculate(t *testing.T) {
