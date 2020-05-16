@@ -1,0 +1,13 @@
+language: go
+
+go:
+  - 1.14.x
+
+go_import_path: github.com/nickwallen/quick-calc
+
+before_script:
+  - go vet ./...
+
+script:
+  - ./.travis.gofmt.sh
+  - go test -v ./...
