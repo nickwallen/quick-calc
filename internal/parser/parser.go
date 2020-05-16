@@ -31,7 +31,7 @@ func Parse(reader tokenReader) (expr Expression, err error) {
 		return value1, nil // all tokens have been consumed
 	default:
 		// something bad happened because tokens remain that were not parsed
-		return expr, fmt.Errorf("parsing error on input '%s'", nextToken.Value)
+		return expr, fmt.Errorf("at position %d, unexpected input '%s'", nextToken.Position, nextToken.Value)
 	}
 }
 
@@ -85,7 +85,7 @@ func expectOperation(reader tokenReader, value1 Expression, operator tokens.Toke
 		// operation complete; default to the units of the first operand, for example '2 kg + 2 g'
 		return binaryExpr(operator, value1, value2, value1.TargetUnits), nil
 	default:
-		return expr, fmt.Errorf("parsing error on unexpected input '%s'", token.Value)
+		return expr, fmt.Errorf("at position %d, unexpected input '%s'", token.Position, token.Value)
 	}
 }
 
@@ -115,7 +115,7 @@ func expectUnits(reader tokenReader) (units Units, err error) {
 	}
 	units, err = UnitsOf(token.Value)
 	if err != nil {
-		return units, err
+		return units, fmt.Errorf("at position %d, %s", token.Position, err)
 	}
 	return units, nil
 }
@@ -126,14 +126,14 @@ func nextToken(reader tokenReader, expected tokens.TokenType) (token tokens.Toke
 		return token, err
 	}
 	if token.TokenType == tokens.Error {
-		return token, fmt.Errorf(token.Value)
+		return token, fmt.Errorf("at position %d, %s", token.Position, token.Value)
 	}
 	if expected != token.TokenType {
 		value := fmt.Sprintf("got '%s'", token.Value)
 		if token.TokenType == tokens.EOF {
 			value = "reached end of input"
 		}
-		return token, fmt.Errorf("expected %s, but %s", expected, value)
+		return token, fmt.Errorf("at position %d expected %s, but %s", token.Position, expected, value)
 	}
 	return token, nil
 }

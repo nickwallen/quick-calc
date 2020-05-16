@@ -53,9 +53,9 @@ func (tok *tokenizer) emit(tokenType tokens.TokenType) {
 	var token tokens.Token
 	switch tokenType {
 	case tokens.EOF:
-		token = tokens.EOF.Token("")
+		token = tokens.EOF.TokenAt("", len(tok.input)+1)
 	default:
-		token = tokenType.Token(tok.current())
+		token = tokenType.TokenAt(tok.current(), tok.start+1)
 	}
 	tok.writer.WriteToken(token)
 	tok.start = tok.pos
@@ -155,7 +155,8 @@ func (tok *tokenizer) run() {
 }
 
 func (tok *tokenizer) error(format string, args ...interface{}) stateFn {
-	token := tokens.Token{TokenType: tokens.Error, Value: fmt.Sprintf(format, args...)}
+	msg := fmt.Sprintf(format, args...)
+	token := tokens.Error.TokenAt(msg, tok.start+1)
 	tok.writer.WriteToken(token)
 	// stop the tokenizer
 	return nil

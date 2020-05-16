@@ -23,21 +23,21 @@ func TestParseValue(t *testing.T) {
 func TestParseValueNoUnits(t *testing.T) {
 	input := io.NewTokenChannel()
 	go func() {
-		input.WriteToken(tokens.Number.Token("23"))
-		input.WriteToken(tokens.EOF.Token(""))
+		input.WriteToken(tokens.Number.TokenAt("23", 1))
+		input.WriteToken(tokens.EOF.TokenAt("", 2))
 	}()
 	_, err := Parse(&input)
-	assert.Equal(t, "expected units, but reached end of input", err.Error())
+	assert.Equal(t, "at position 2 expected units, but reached end of input", err.Error())
 }
 
 func TestParseValueNoNumber(t *testing.T) {
 	input := io.NewTokenChannel()
 	go func() {
-		input.WriteToken(tokens.Units.Token("pounds"))
-		input.WriteToken(tokens.EOF.Token(""))
+		input.WriteToken(tokens.Units.TokenAt("pounds", 1))
+		input.WriteToken(tokens.EOF.TokenAt("", 2))
 	}()
 	_, err := Parse(&input)
-	assert.Equal(t, "expected number, but got 'pounds'", err.Error())
+	assert.Equal(t, "at position 1 expected number, but got 'pounds'", err.Error())
 }
 
 func TestParseBinaryAdd(t *testing.T) {

@@ -19,7 +19,7 @@ func Calculate(input string) (string, error) {
 	var result string
 	amt, err := CalculateAmount(input)
 	if err != nil {
-		return result, fmt.Errorf("execution error: %s", err.Error())
+		return result, err
 	}
 	result = fmt.Sprintf("%.2f %s", amt.Value, amt.Units)
 	return result, nil
@@ -31,7 +31,7 @@ func CalculateAmount(input string) (amt Amount, err error) {
 	go tokenizer.Tokenize(input, tokens)
 	expr, err := parser.Parse(tokens)
 	if err != nil {
-		return amt, fmt.Errorf("parse error: %s", err.Error())
+		return amt, err
 	}
 	return eval(&expr)
 }

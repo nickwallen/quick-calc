@@ -8,6 +8,7 @@ import (
 type Token struct {
 	TokenType TokenType // the type like numberToken
 	Value     string    // the value, like "46.2"
+	Position  int       // the starting position of the token
 }
 
 // TokenType the type of an emitted Token
@@ -59,9 +60,14 @@ func (t TokenType) String() string {
 	}
 }
 
-// Token Returns a new Token of this type.
+// Token creates a new Token.
 func (t TokenType) Token(value string) Token {
 	return Token{TokenType: t, Value: value}
+}
+
+// TokenAt creates a Token at a fixed position.
+func (t TokenType) TokenAt(value string, position int) Token {
+	return Token{TokenType: t, Value: value, Position: position}
 }
 
 func (t Token) String() string {
