@@ -1,3 +1,6 @@
+![Go](https://github.com/nickwallen/quick-calc/workflows/Go/badge.svg?branch=master)
+
+
 ## Quick Calc
 
 A simple calculator that operates on units of measure and allows for quick conversions.
