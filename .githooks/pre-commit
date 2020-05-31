@@ -1,2 +1,2 @@
 #!/bin/sh
-make clean check build test
+make all
