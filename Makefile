@@ -1,11 +1,22 @@
 TARGET = bin
 BINARY = qcalc
 
-all:
+all: clean check build test 
+
+clean:
+	go clean "./..."
+	rm -rf $(TARGET)
+
+check:
+	go fmt ./...
+	go vet ./...
+	golint "-set_exit_status" ./...
+
+build:
 	go build "./..."
 
 test:
-	.githooks/pre-commit
+	go test "./..."
 
 debug:
 	go run cmd/cli/main.go debug
@@ -20,6 +31,3 @@ binary:
 samples:
 	go run cmd/gen/main.go
 
-clean:
-	go clean "./..."
-	rm -rf $(TARGET)
