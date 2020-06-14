@@ -123,7 +123,7 @@ func convertUnits(from Amount, units parser.Units) (Amount, error) {
 	}
 	value, err := u.ConvertFloat(from.Value, fromUnits, toUnits)
 	if err != nil {
-		return amt, err
+		return amt, ErrorInvalidUnitConversion(from.Units, units.String())
 	}
 	amt = Amount{value.Float(), units.String()}
 	return amt, nil
