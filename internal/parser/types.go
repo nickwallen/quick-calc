@@ -55,7 +55,7 @@ func UnitsOf(input string) (Units, error) {
 		return result, err
 	}
 
-	// use a 'standard' name which may differ from what the user input
+	// use a 'standard' badName which may differ from what the user input
 	result.units = input
 	return result, nil
 }

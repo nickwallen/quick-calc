@@ -27,7 +27,7 @@ func TestParseValueNoUnits(t *testing.T) {
 		input.WriteToken(tokens.EOF.TokenAt("", 2))
 	}()
 	_, err := Parse(&input)
-	assert.Equal(t, "at position 2 expected units, but reached end of input", err.Error())
+	assert.Equal(t, "at position 2, reached end of input, but expected a unit", err.Error())
 }
 
 func TestParseValueNoNumber(t *testing.T) {
@@ -37,7 +37,7 @@ func TestParseValueNoNumber(t *testing.T) {
 		input.WriteToken(tokens.EOF.TokenAt("", 2))
 	}()
 	_, err := Parse(&input)
-	assert.Equal(t, "at position 1 expected number, but got 'pounds'", err.Error())
+	assert.Equal(t, "at position 1, got 'pounds', but expected a number", err.Error())
 }
 
 func TestParseBinaryAdd(t *testing.T) {

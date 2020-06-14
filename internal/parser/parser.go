@@ -1,18 +1,20 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/nickwallen/quick-calc/internal/tokens"
 	"strconv"
 )
 
 // the interface used by the parser to read tokens
 type tokenReader interface {
+	// ReadToken reads the next token
 	ReadToken() (tokens.Token, error)
 }
 
 // Parse a series of tokens and returns an expression.
-func Parse(reader tokenReader) (expr Expression, err error) {
+func Parse(reader tokenReader) (Expression, error) {
+	var expr Expression
+
 	// an expression should start with a value like '23 pounds'
 	value1, err := expectValue(reader)
 	if err != nil {
@@ -28,10 +30,9 @@ func Parse(reader tokenReader) (expr Expression, err error) {
 	case tokens.In:
 		return expectConversion(reader, value1)
 	case tokens.EOF:
-		return value1, nil // all tokens have been consumed
+		return value1, nil
 	default:
-		// something bad happened because tokens remain that were not parsed
-		return expr, fmt.Errorf("at position %d, unexpected input '%s'", nextToken.Position, nextToken.Value)
+		return expr, ErrorUnexpectedToken(nextToken, tokens.Plus, tokens.Minus, tokens.In)
 	}
 }
 
@@ -62,7 +63,7 @@ func expectOperation(reader tokenReader, value1 Expression, operator tokens.Toke
 	}
 	// what units should the result be in?
 	switch token.TokenType {
-	case tokens.Plus, tokens.Minus, tokens.Multiply, tokens.Divide:
+	case tokens.Plus, tokens.Minus:
 		// the operation has more operands
 		right, err := expectOperation(reader, value2, token.TokenType)
 		if err != nil {
@@ -85,7 +86,7 @@ func expectOperation(reader tokenReader, value1 Expression, operator tokens.Toke
 		// operation complete; default to the units of the first operand, for example '2 kg + 2 g'
 		return binaryExpr(operator, value1, value2, value1.TargetUnits), nil
 	default:
-		return expr, fmt.Errorf("at position %d, unexpected input '%s'", token.Position, token.Value)
+		return expr, ErrorUnexpectedToken(token, tokens.Plus, tokens.Minus, tokens.In, tokens.EOF)
 	}
 }
 
@@ -115,25 +116,25 @@ func expectUnits(reader tokenReader) (units Units, err error) {
 	}
 	units, err = UnitsOf(token.Value)
 	if err != nil {
-		return units, fmt.Errorf("at position %d, %s", token.Position, err)
+		return units, ErrorInvalidUnits(token)
 	}
 	return units, nil
 }
 
-func nextToken(reader tokenReader, expected tokens.TokenType) (token tokens.Token, err error) {
-	token, err = reader.ReadToken()
+func nextToken(reader tokenReader, expected tokens.TokenType) (tokens.Token, error) {
+	var nextToken tokens.Token
+	nextToken, err := reader.ReadToken()
 	if err != nil {
-		return token, err
+		return nextToken, ErrorReadFailed(err)
 	}
-	if token.TokenType == tokens.Error {
-		return token, fmt.Errorf("at position %d, %s", token.Position, token.Value)
+	if nextToken.TokenType == tokens.Error {
+		return nextToken, ErrorReadFailedNoCause()
 	}
-	if expected != token.TokenType {
-		value := fmt.Sprintf("got '%s'", token.Value)
-		if token.TokenType == tokens.EOF {
-			value = "reached end of input"
+	if expected != nextToken.TokenType {
+		if nextToken.TokenType == tokens.EOF {
+			return nextToken, ErrorUnexpectedEOF(nextToken, expected)
 		}
-		return token, fmt.Errorf("at position %d expected %s, but %s", token.Position, expected, value)
+		return nextToken, ErrorUnexpectedToken(nextToken, expected)
 	}
-	return token, nil
+	return nextToken, nil
 }

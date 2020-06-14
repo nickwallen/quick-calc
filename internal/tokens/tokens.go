@@ -40,21 +40,21 @@ func (t TokenType) String() string {
 	case Error:
 		return "error"
 	case EOF:
-		return "end-of-line"
+		return "end of input"
 	case Plus:
-		return "addition (+)"
+		return "'+'"
 	case Minus:
-		return "minus (-)"
+		return "'-'"
 	case Multiply:
-		return "multiply (*)"
+		return "'*'"
 	case Divide:
-		return "division (/)"
+		return "'/'"
 	case In:
-		return "keyword 'in'"
+		return "'in'"
 	case Number:
-		return "number"
+		return "a number"
 	case Units:
-		return "units"
+		return "a unit"
 	default:
 		return "unknown"
 	}
