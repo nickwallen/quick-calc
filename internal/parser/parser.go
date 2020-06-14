@@ -23,7 +23,7 @@ func Parse(reader tokenReader) (expr Expression, err error) {
 		return expr, err
 	}
 	switch nextToken.TokenType {
-	case tokens.Plus, tokens.Minus, tokens.Multiply, tokens.Divide:
+	case tokens.Plus, tokens.Minus:
 		return expectOperation(reader, value1, nextToken.TokenType)
 	case tokens.In:
 		return expectConversion(reader, value1)

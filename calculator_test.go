@@ -43,14 +43,16 @@ func TestCalculateAmount(t *testing.T) {
 	}
 }
 
-var badExpressions = []string{
-	"2 miles + 3 pounds",
-	"32 googles",
+var badExpressions = map[string]string{
+	"2 miles + 3 pounds": "failed to resolve conversion: no path found",
+	"32 googles":         "at position 4, unit \"google\" not found",
+	"2 miles / 500 feet": "at position 9, unexpected input '/'",
 }
 
 func TestCalculateBadExpr(t *testing.T) {
-	for _, expression := range badExpressions {
-		_, err := calc.Calculate(expression)
+	for expr, expectedErr := range badExpressions {
+		_, err := calc.Calculate(expr)
 		assert.NotNil(t, err)
+		assert.Equal(t, expectedErr, fmt.Sprintf("%s", err))
 	}
 }
