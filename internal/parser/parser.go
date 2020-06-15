@@ -72,21 +72,11 @@ func expectOperation(reader tokenReader, value1 types.Expression, operator types
 		}
 		return expectOperation(reader, left, token)
 	case types.In:
-		// the units have been specified, for example '2 kg + 2 g in grams'
-		units, err := expectUnits(reader)
-		if err != nil {
-			return expr, err
-		}
-		// expect EOF
-		_, err = nextToken(reader, types.EOF)
-		if err != nil {
-			return expr, err
-		}
 		from, err := binaryExpr(operator, value1, value2)
 		if err != nil {
 			return expr, err
 		}
-		return types.UnitConversionExpr(from, units), nil
+		return expectConversion(reader, from)
 	case types.EOF:
 		return binaryExpr(operator, value1, value2)
 	default:
