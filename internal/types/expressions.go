@@ -8,7 +8,7 @@ import (
 // Amount is the result of evaluating an expression.
 type Amount struct {
 	Value float64
-	Units string
+	Units Token
 }
 
 // Expression is something that can be evaluated.
@@ -19,11 +19,11 @@ type Expression interface {
 // Value represents a fixed Value like "2 pounds".
 type Value struct {
 	number float64
-	unit   string
+	unit   Token
 }
 
 // NewValue creates a new Value.
-func NewValue(number float64, unit string) Value {
+func NewValue(number float64, unit Token) Value {
 	return Value{number, unit}
 }
 
@@ -84,11 +84,11 @@ func (s Subtraction) String() string {
 // UnitConversion converts between units of measure
 type UnitConversion struct {
 	expr        Expression
-	targetUnits string
+	targetUnits Token
 }
 
 // UnitConversionExpr creates a new unit conversion expression.
-func UnitConversionExpr(expr Expression, targetUnits string) UnitConversion {
+func UnitConversionExpr(expr Expression, targetUnits Token) UnitConversion {
 	return UnitConversion{expr, targetUnits}
 }
 
@@ -100,13 +100,13 @@ func (c UnitConversion) Eval() (amount Amount, err error) {
 		return amount, err
 	}
 	// is unit conversion needed?
-	if amount.Units != c.targetUnits {
-		fromUnits, err := u.Find(amount.Units)
+	if amount.Units.String() != c.targetUnits.Value {
+		fromUnits, err := u.Find(amount.Units.Value)
 		if err != nil {
 			return amount, err
 		}
 
-		toUnits, err := u.Find(c.targetUnits)
+		toUnits, err := u.Find(c.targetUnits.Value)
 		if err != nil {
 			return amount, err
 		}
@@ -167,7 +167,6 @@ func eval(leftExpr Expression, rightExpr Expression, opFunc opFunction) (Amount,
 		}
 	}
 
-	// do the summation
 	result = Amount{
 		Value: opFunc(left.Value, right.Value),
 		Units: targetUnit,

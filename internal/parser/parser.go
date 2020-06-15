@@ -97,7 +97,7 @@ func expectValue(reader tokenReader) (expr types.Expression, err error) {
 	return expr, nil
 }
 
-func expectUnits(reader tokenReader) (units string, err error) {
+func expectUnits(reader tokenReader) (units types.Token, err error) {
 	token, err := nextToken(reader, types.Units)
 	if err != nil {
 		return units, err
@@ -107,7 +107,7 @@ func expectUnits(reader tokenReader) (units string, err error) {
 	if err != nil {
 		return units, errorInvalidUnits(token)
 	}
-	return token.Value, nil
+	return token, nil
 }
 
 func nextToken(reader tokenReader, expected types.TokenType) (nextToken types.Token, err error) {

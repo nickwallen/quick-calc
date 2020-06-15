@@ -15,7 +15,7 @@ func Calculate(input string) (string, error) {
 	if err != nil {
 		return result, err
 	}
-	result = fmt.Sprintf("%.2f %s", amt.Value, amt.Units)
+	result = fmt.Sprintf("%.2f %s", amt.Value, amt.Units.Value)
 	return result, nil
 }
 
