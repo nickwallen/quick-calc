@@ -33,7 +33,7 @@ func Parse(reader tokenReader) (types.Expression, error) {
 	case types.EOF:
 		return value1, nil
 	default:
-		return expr, ErrorUnexpectedToken(nextToken, types.Plus, types.Minus, types.In)
+		return expr, errorUnexpectedToken(nextToken, types.Plus, types.Minus, types.In)
 	}
 }
 
@@ -90,7 +90,7 @@ func expectOperation(reader tokenReader, value1 types.Expression, operator types
 	case types.EOF:
 		return binaryExpr(operator, value1, value2)
 	default:
-		return expr, ErrorUnexpectedToken(token, types.Plus, types.Minus, types.In, types.EOF)
+		return expr, errorUnexpectedToken(token, types.Plus, types.Minus, types.In, types.EOF)
 	}
 }
 
@@ -121,7 +121,7 @@ func expectUnits(reader tokenReader) (units string, err error) {
 	// ensure that the units are valid
 	_, err = u.Find(token.Value)
 	if err != nil {
-		return units, ErrorInvalidUnits(token)
+		return units, errorInvalidUnits(token)
 	}
 
 	return token.Value, nil
@@ -130,16 +130,16 @@ func expectUnits(reader tokenReader) (units string, err error) {
 func nextToken(reader tokenReader, expected types.TokenType) (nextToken types.Token, err error) {
 	nextToken, err = reader.ReadToken()
 	if err != nil {
-		return nextToken, ErrorReadFailed(err)
+		return nextToken, errorReadFailed(err)
 	}
 	if nextToken.TokenType == types.Error {
-		return nextToken, ErrorReadFailedNoCause()
+		return nextToken, errorReadFailedNoCause()
 	}
 	if expected != nextToken.TokenType {
 		if nextToken.TokenType == types.EOF {
-			return nextToken, ErrorUnexpectedEOF(nextToken, expected)
+			return nextToken, errorUnexpectedEOF(nextToken, expected)
 		}
-		return nextToken, ErrorUnexpectedToken(nextToken, expected)
+		return nextToken, errorUnexpectedToken(nextToken, expected)
 	}
 	return nextToken, nil
 }
@@ -152,6 +152,6 @@ func binaryExpr(operator types.Token, left types.Expression, right types.Express
 	case types.Minus:
 		return types.DoSubtraction(left, right), nil
 	default:
-		return expr, ErrorInvalidOperator(operator)
+		return expr, errorInvalidOperator(operator)
 	}
 }
