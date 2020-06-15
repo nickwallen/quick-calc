@@ -48,7 +48,7 @@ func expectConversion(reader tokenReader, from types.Expression) (expr types.Exp
 	if err != nil {
 		return expr, err
 	}
-	return types.DoUnitConversion(from, units), nil
+	return types.UnitConversionExpr(from, units), nil
 }
 
 func expectOperation(reader tokenReader, value1 types.Expression, operator types.Token) (expr types.Expression, err error) {
@@ -86,7 +86,7 @@ func expectOperation(reader tokenReader, value1 types.Expression, operator types
 		if err != nil {
 			return expr, err
 		}
-		return types.DoUnitConversion(from, units), nil
+		return types.UnitConversionExpr(from, units), nil
 	case types.EOF:
 		return binaryExpr(operator, value1, value2)
 	default:
@@ -148,9 +148,9 @@ func nextToken(reader tokenReader, expected types.TokenType) (nextToken types.To
 func binaryExpr(operator types.Token, left types.Expression, right types.Expression) (expr types.Expression, err error) {
 	switch operator.TokenType {
 	case types.Plus:
-		return types.DoAddition(left, right), nil
+		return types.AdditionExpr(left, right), nil
 	case types.Minus:
-		return types.DoSubtraction(left, right), nil
+		return types.SubtractionExpr(left, right), nil
 	default:
 		return expr, errorInvalidOperator(operator)
 	}

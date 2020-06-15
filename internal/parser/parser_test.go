@@ -51,7 +51,7 @@ func TestParseBinaryAdd(t *testing.T) {
 		input.WriteToken(types.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := types.DoAddition(
+	expected := types.AdditionExpr(
 		types.NewValue(23, "kg"),
 		types.NewValue(23, "pounds"))
 	assert.Equal(t, expected, actual)
@@ -69,7 +69,7 @@ func TestParseBinarySubtract(t *testing.T) {
 		input.WriteToken(types.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := types.DoSubtraction(
+	expected := types.SubtractionExpr(
 		types.NewValue(23, "kg"),
 		types.NewValue(23, "pounds"))
 	assert.Equal(t, expected, actual)
@@ -86,7 +86,7 @@ func TestParseConversion(t *testing.T) {
 		input.WriteToken(types.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := types.DoUnitConversion(types.NewValue(2, "pounds"), "ounces")
+	expected := types.UnitConversionExpr(types.NewValue(2, "pounds"), "ounces")
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
@@ -104,8 +104,8 @@ func TestParseBinarySumAndConvert(t *testing.T) {
 		input.WriteToken(types.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := types.DoUnitConversion(
-		types.DoAddition(
+	expected := types.UnitConversionExpr(
+		types.AdditionExpr(
 			types.NewValue(2, "ounces"),
 			types.NewValue(2, "pounds")),
 		"pounds")
@@ -126,8 +126,8 @@ func TestParseBinarySubtractAndConvert(t *testing.T) {
 		input.WriteToken(types.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := types.DoUnitConversion(
-		types.DoSubtraction(
+	expected := types.UnitConversionExpr(
+		types.SubtractionExpr(
 			types.NewValue(2, "pounds"),
 			types.NewValue(2, "ounces")),
 		"ounces")
@@ -149,8 +149,8 @@ func TestParseSum(t *testing.T) {
 		input.WriteToken(types.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := types.DoAddition(
-		types.DoAddition(
+	expected := types.AdditionExpr(
+		types.AdditionExpr(
 			types.NewValue(2, "ounces"),
 			types.NewValue(3, "ounces")),
 		types.NewValue(4, "ounces"))
@@ -175,9 +175,9 @@ func TestParseSum2(t *testing.T) {
 		input.WriteToken(types.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := types.DoAddition(
-		types.DoSubtraction(
-			types.DoAddition(
+	expected := types.AdditionExpr(
+		types.SubtractionExpr(
+			types.AdditionExpr(
 				types.NewValue(2, "ounces"),
 				types.NewValue(3, "ounces")),
 			types.NewValue(4, "ounces")),

@@ -45,8 +45,8 @@ type Addition struct {
 	right Expression
 }
 
-// DoAddition creates a new expression that performs Addition.
-func DoAddition(left, right Expression) Addition {
+// AdditionExpr creates a new expression that performs Addition.
+func AdditionExpr(left, right Expression) Addition {
 	return Addition{left, right}
 }
 
@@ -66,8 +66,8 @@ type Subtraction struct {
 	right Expression
 }
 
-// DoSubtraction creates a new expression that performs Subtraction.
-func DoSubtraction(left, right Expression) Subtraction {
+// SubtractionExpr creates a new expression that performs Subtraction.
+func SubtractionExpr(left, right Expression) Subtraction {
 	return Subtraction{left, right}
 }
 
@@ -87,8 +87,8 @@ type UnitConversion struct {
 	targetUnits string
 }
 
-// DoUnitConversion creates a new unit conversion expression.
-func DoUnitConversion(expr Expression, targetUnits string) UnitConversion {
+// UnitConversionExpr creates a new unit conversion expression.
+func UnitConversionExpr(expr Expression, targetUnits string) UnitConversion {
 	return UnitConversion{expr, targetUnits}
 }
 
@@ -147,7 +147,7 @@ func eval(leftExpr Expression, rightExpr Expression, opFunc opFunction) (Amount,
 
 	// unit conversion, if needed
 	if left.Units != targetUnit {
-		left, err = DoUnitConversion(leftExpr, targetUnit).Eval()
+		left, err = UnitConversionExpr(leftExpr, targetUnit).Eval()
 		if err != nil {
 			return result, err
 		}
@@ -161,7 +161,7 @@ func eval(leftExpr Expression, rightExpr Expression, opFunc opFunction) (Amount,
 
 	// unit conversion, if needed
 	if right.Units != targetUnit {
-		right, err = DoUnitConversion(rightExpr, targetUnit).Eval()
+		right, err = UnitConversionExpr(rightExpr, targetUnit).Eval()
 		if err != nil {
 			return result, err
 		}
