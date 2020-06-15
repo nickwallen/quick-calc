@@ -2,20 +2,20 @@ package io
 
 import (
 	"fmt"
-	"github.com/nickwallen/quick-calc/internal/tokens"
+	"github.com/nickwallen/quick-calc/internal/types"
 )
 
 // TokenChannel Enables tokens to be read from and written to a channel.
-type TokenChannel chan tokens.Token
+type TokenChannel chan types.Token
 
 // NewTokenChannel Creates a new token channel.
 func NewTokenChannel() TokenChannel {
-	return make(chan tokens.Token, 2)
+	return make(chan types.Token, 2)
 }
 
 // ReadToken Reads tokens from a channel.
-func (ch TokenChannel) ReadToken() (tokens.Token, error) {
-	var token tokens.Token
+func (ch TokenChannel) ReadToken() (types.Token, error) {
+	var token types.Token
 	token, ok := <-ch
 	if !ok {
 		return token, fmt.Errorf("no more tokens; channel is closed")
@@ -24,7 +24,7 @@ func (ch TokenChannel) ReadToken() (tokens.Token, error) {
 }
 
 // WriteToken Writes tokens to a channel.
-func (ch TokenChannel) WriteToken(token tokens.Token) error {
+func (ch TokenChannel) WriteToken(token types.Token) error {
 	ch <- token
 	return nil
 }

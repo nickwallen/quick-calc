@@ -2,20 +2,20 @@ package parser
 
 import (
 	"fmt"
-	"github.com/nickwallen/quick-calc/internal/tokens"
+	"github.com/nickwallen/quick-calc/internal/types"
 	"strings"
 )
 
 // UnexpectedToken is an error that occurs when an unexpected token is found.
 type UnexpectedToken struct {
-	Expected []tokens.TokenType // the type of token(s) that are expected
-	BadToken tokens.Token       // the token that we got
-	Position int                // the position of the error
-	Width    int                // the width of the error
+	Expected []types.TokenType // the type of token(s) that are expected
+	BadToken types.Token       // the token that we got
+	Position int               // the position of the error
+	Width    int               // the width of the error
 }
 
 // ErrorUnexpectedToken creates a new unexpected token error.
-func ErrorUnexpectedToken(badToken tokens.Token, expected ...tokens.TokenType) *UnexpectedToken {
+func ErrorUnexpectedToken(badToken types.Token, expected ...types.TokenType) *UnexpectedToken {
 	return &UnexpectedToken{
 		Expected: expected,
 		BadToken: badToken,
@@ -34,13 +34,13 @@ func (u *UnexpectedToken) Error() string {
 
 // UnexpectedEOF is an error that occurs when the end of input is reached prematurely.
 type UnexpectedEOF struct {
-	Expected  []tokens.TokenType // the type of token(s) that are expected
-	LastToken tokens.Token       // the last token read
-	Position  int                // the position of the error
+	Expected  []types.TokenType // the type of token(s) that are expected
+	LastToken types.Token       // the last token read
+	Position  int               // the position of the error
 }
 
 // ErrorUnexpectedEOF creates a new unexpected EOF errors.
-func ErrorUnexpectedEOF(lastToken tokens.Token, expected ...tokens.TokenType) *UnexpectedEOF {
+func ErrorUnexpectedEOF(lastToken types.Token, expected ...types.TokenType) *UnexpectedEOF {
 	return &UnexpectedEOF{
 		Expected:  expected,
 		LastToken: lastToken,
@@ -83,7 +83,7 @@ type InvalidUnits struct {
 }
 
 // ErrorInvalidUnits Creates a new invalid units error.
-func ErrorInvalidUnits(badToken tokens.Token) *InvalidUnits {
+func ErrorInvalidUnits(badToken types.Token) *InvalidUnits {
 	return &InvalidUnits{
 		Name:     badToken.Value,
 		Position: badToken.Position,
@@ -93,4 +93,18 @@ func ErrorInvalidUnits(badToken tokens.Token) *InvalidUnits {
 
 func (u *InvalidUnits) Error() string {
 	return fmt.Sprintf("at position %d, '%s' is not a known measurement unit", u.Position, u.Name)
+}
+
+// InvalidOperator occurs when an unsupported operator is used.
+type InvalidOperator struct {
+	operator types.Token
+}
+
+func (i *InvalidOperator) Error() string {
+	return fmt.Sprintf("at position %d, found invalid operator %s", i.operator.Position, i.operator.Value)
+}
+
+// ErrorInvalidOperator Creates an invalid operator error.
+func ErrorInvalidOperator(operator types.Token) *InvalidOperator {
+	return &InvalidOperator{operator}
 }

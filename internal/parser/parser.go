@@ -1,19 +1,20 @@
 package parser
 
 import (
-	"github.com/nickwallen/quick-calc/internal/tokens"
+	u "github.com/bcicen/go-units"
+	"github.com/nickwallen/quick-calc/internal/types"
 	"strconv"
 )
 
 // the interface used by the parser to read tokens
 type tokenReader interface {
 	// ReadToken reads the next token
-	ReadToken() (tokens.Token, error)
+	ReadToken() (types.Token, error)
 }
 
 // Parse a series of tokens and returns an expression.
-func Parse(reader tokenReader) (Expression, error) {
-	var expr Expression
+func Parse(reader tokenReader) (types.Expression, error) {
+	var expr types.Expression
 
 	// an expression should start with a value like '23 pounds'
 	value1, err := expectValue(reader)
@@ -25,32 +26,32 @@ func Parse(reader tokenReader) (Expression, error) {
 		return expr, err
 	}
 	switch nextToken.TokenType {
-	case tokens.Plus, tokens.Minus:
-		return expectOperation(reader, value1, nextToken.TokenType)
-	case tokens.In:
+	case types.Plus, types.Minus:
+		return expectOperation(reader, value1, nextToken)
+	case types.In:
 		return expectConversion(reader, value1)
-	case tokens.EOF:
+	case types.EOF:
 		return value1, nil
 	default:
-		return expr, ErrorUnexpectedToken(nextToken, tokens.Plus, tokens.Minus, tokens.In)
+		return expr, ErrorUnexpectedToken(nextToken, types.Plus, types.Minus, types.In)
 	}
 }
 
-func expectConversion(reader tokenReader, from Expression) (expr Expression, err error) {
+func expectConversion(reader tokenReader, from types.Expression) (expr types.Expression, err error) {
 	// expect the units to convert to
 	units, err := expectUnits(reader)
 	if err != nil {
 		return expr, err
 	}
 	// expect EOF
-	_, err = nextToken(reader, tokens.EOF)
+	_, err = nextToken(reader, types.EOF)
 	if err != nil {
 		return expr, err
 	}
-	return conversion(from, units), nil
+	return types.DoUnitConversion(from, units), nil
 }
 
-func expectOperation(reader tokenReader, value1 Expression, operator tokens.TokenType) (expr Expression, err error) {
+func expectOperation(reader tokenReader, value1 types.Expression, operator types.Token) (expr types.Expression, err error) {
 	// to this point, we've already seen... operand1 +
 	// now expect the second operand
 	value2, err := expectValue(reader)
@@ -61,38 +62,40 @@ func expectOperation(reader tokenReader, value1 Expression, operator tokens.Toke
 	if err != nil {
 		return expr, err
 	}
-	// what units should the result be in?
+
 	switch token.TokenType {
-	case tokens.Plus, tokens.Minus:
+	case types.Plus, types.Minus:
 		// the operation has more operands
-		right, err := expectOperation(reader, value2, token.TokenType)
+		left, err := binaryExpr(operator, value1, value2)
 		if err != nil {
 			return expr, err
 		}
-		return binaryExpr(operator, value1, right, value1.TargetUnits), nil
-	case tokens.In:
+		return expectOperation(reader, left, token)
+	case types.In:
 		// the units have been specified, for example '2 kg + 2 g in grams'
 		units, err := expectUnits(reader)
 		if err != nil {
 			return expr, err
 		}
 		// expect EOF
-		_, err = nextToken(reader, tokens.EOF)
+		_, err = nextToken(reader, types.EOF)
 		if err != nil {
 			return expr, err
 		}
-		return binaryExpr(operator, value1, value2, units), nil
-	case tokens.EOF:
-		// operation complete; default to the units of the first operand, for example '2 kg + 2 g'
-		return binaryExpr(operator, value1, value2, value1.TargetUnits), nil
+		from, err := binaryExpr(operator, value1, value2)
+		if err != nil {
+			return expr, err
+		}
+		return types.DoUnitConversion(from, units), nil
+	case types.EOF:
+		return binaryExpr(operator, value1, value2)
 	default:
-		return expr, ErrorUnexpectedToken(token, tokens.Plus, tokens.Minus, tokens.In, tokens.EOF)
+		return expr, ErrorUnexpectedToken(token, types.Plus, types.Minus, types.In, types.EOF)
 	}
 }
 
-func expectValue(reader tokenReader) (Expression, error) {
-	var expr Expression
-	token, err := nextToken(reader, tokens.Number)
+func expectValue(reader tokenReader) (expr types.Expression, err error) {
+	token, err := nextToken(reader, types.Number)
 	if err != nil {
 		return expr, err
 	}
@@ -105,36 +108,50 @@ func expectValue(reader tokenReader) (Expression, error) {
 	if err != nil {
 		return expr, err
 	}
-	expr = valueExpr(number, units)
+	expr = types.NewValue(number, units)
 	return expr, nil
 }
 
-func expectUnits(reader tokenReader) (units Units, err error) {
-	token, err := nextToken(reader, tokens.Units)
+func expectUnits(reader tokenReader) (units string, err error) {
+	token, err := nextToken(reader, types.Units)
 	if err != nil {
 		return units, err
 	}
-	units, err = UnitsOf(token.Value)
+
+	// ensure that the units are valid
+	_, err = u.Find(token.Value)
 	if err != nil {
 		return units, ErrorInvalidUnits(token)
 	}
-	return units, nil
+
+	return token.Value, nil
 }
 
-func nextToken(reader tokenReader, expected tokens.TokenType) (tokens.Token, error) {
-	var nextToken tokens.Token
-	nextToken, err := reader.ReadToken()
+func nextToken(reader tokenReader, expected types.TokenType) (nextToken types.Token, err error) {
+	nextToken, err = reader.ReadToken()
 	if err != nil {
 		return nextToken, ErrorReadFailed(err)
 	}
-	if nextToken.TokenType == tokens.Error {
+	if nextToken.TokenType == types.Error {
 		return nextToken, ErrorReadFailedNoCause()
 	}
 	if expected != nextToken.TokenType {
-		if nextToken.TokenType == tokens.EOF {
+		if nextToken.TokenType == types.EOF {
 			return nextToken, ErrorUnexpectedEOF(nextToken, expected)
 		}
 		return nextToken, ErrorUnexpectedToken(nextToken, expected)
 	}
 	return nextToken, nil
+}
+
+// binaryExpr Create an expression where two values are acted on by an operator.
+func binaryExpr(operator types.Token, left types.Expression, right types.Expression) (expr types.Expression, err error) {
+	switch operator.TokenType {
+	case types.Plus:
+		return types.DoAddition(left, right), nil
+	case types.Minus:
+		return types.DoSubtraction(left, right), nil
+	default:
+		return expr, ErrorInvalidOperator(operator)
+	}
 }

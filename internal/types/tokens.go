@@ -1,4 +1,4 @@
-package tokens
+package types
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 // Token a tokenizer emits tokens.
 type Token struct {
 	TokenType TokenType // the type like numberToken
-	Value     string    // the value, like "46.2"
+	Value     string    // the Value, like "46.2"
 	Position  int       // the starting position of the token
 }
 
@@ -29,7 +29,7 @@ const (
 	Divide
 	// In A symbol for conversions; 23 lbs in kg.
 	In
-	// Number A numeral value like 23.
+	// Number A numeral Value like 23.
 	Number
 	// Units The units of measure like 'kg' or 'pounds'.
 	Units

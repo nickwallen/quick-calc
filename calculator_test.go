@@ -25,13 +25,16 @@ var expressions = map[string]string{
 	"12 years in days":                    "4383.00 days",
 	"12 mmmH2O + 12 mmmH2O":               "24.00 mmmH2O",
 	"2 oz + 3 oz + 4 oz + 5 oz":           "14.00 oz",
+	"2 oz - 3 oz + 4 oz + 5 oz":           "8.00 oz",
+	"2 oz + 3 oz - 4 oz + 5 oz":           "6.00 oz",
+	"2 oz + 3 oz + 4 oz - 5 oz":           "4.00 oz",
 }
 
 func TestCalculate(t *testing.T) {
 	for expression, expected := range expressions {
 		actual, err := calc.Calculate(expression)
-		assert.Nil(t, err)
-		assert.Equal(t, expected, actual)
+		assert.Nil(t, err, expression)
+		assert.Equal(t, expected, actual, expression)
 	}
 }
 

@@ -13,7 +13,7 @@ build:
 	golint "-set_exit_status" ./...
 	go build "./..."
 
-test:
+test: build
 	go test "./..."
 
 debug:
