@@ -28,6 +28,7 @@ var expressions = map[string]string{
 	"2 oz - 3 oz + 4 oz + 5 oz":           "8.00 oz",
 	"2 oz + 3 oz - 4 oz + 5 oz":           "6.00 oz",
 	"2 oz + 3 oz + 4 oz - 5 oz":           "4.00 oz",
+	"2 oz + 3 oz + 4 oz - 5 oz in pounds": "0.25 pounds",
 }
 
 func TestCalculate(t *testing.T) {

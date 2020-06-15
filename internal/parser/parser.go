@@ -51,10 +51,14 @@ func expectConversion(reader tokenReader, from types.Expression) (expr types.Exp
 	return types.UnitConversionExpr(from, units), nil
 }
 
-func expectOperation(reader tokenReader, value1 types.Expression, operator types.Token) (expr types.Expression, err error) {
-	// to this point, we've already seen... operand1 +
-	// now expect the second operand
-	value2, err := expectValue(reader)
+func expectOperation(reader tokenReader, prevValue types.Expression, operator types.Token) (expr types.Expression, err error) {
+	// expect the next operand in the expression
+	nextValue, err := expectValue(reader)
+	if err != nil {
+		return expr, err
+	}
+	// we have an expression like prevValue + nextValue
+	expr, err = operationExpr(operator, prevValue, nextValue)
 	if err != nil {
 		return expr, err
 	}
@@ -62,23 +66,14 @@ func expectOperation(reader tokenReader, value1 types.Expression, operator types
 	if err != nil {
 		return expr, err
 	}
-
 	switch token.TokenType {
 	case types.Plus, types.Minus:
-		// the operation has more operands
-		left, err := binaryExpr(operator, value1, value2)
-		if err != nil {
-			return expr, err
-		}
-		return expectOperation(reader, left, token)
+		// the operation has more operands; prevValue + nextValue + ...
+		return expectOperation(reader, expr, token)
 	case types.In:
-		from, err := binaryExpr(operator, value1, value2)
-		if err != nil {
-			return expr, err
-		}
-		return expectConversion(reader, from)
+		return expectConversion(reader, expr)
 	case types.EOF:
-		return binaryExpr(operator, value1, value2)
+		return expr, nil
 	default:
 		return expr, errorUnexpectedToken(token, types.Plus, types.Minus, types.In, types.EOF)
 	}
@@ -107,13 +102,11 @@ func expectUnits(reader tokenReader) (units string, err error) {
 	if err != nil {
 		return units, err
 	}
-
 	// ensure that the units are valid
 	_, err = u.Find(token.Value)
 	if err != nil {
 		return units, errorInvalidUnits(token)
 	}
-
 	return token.Value, nil
 }
 
@@ -134,8 +127,8 @@ func nextToken(reader tokenReader, expected types.TokenType) (nextToken types.To
 	return nextToken, nil
 }
 
-// binaryExpr Create an expression where two values are acted on by an operator.
-func binaryExpr(operator types.Token, left types.Expression, right types.Expression) (expr types.Expression, err error) {
+// operationExpr Create an expression where two values are acted on by an operator.
+func operationExpr(operator types.Token, left types.Expression, right types.Expression) (expr types.Expression, err error) {
 	switch operator.TokenType {
 	case types.Plus:
 		return types.AdditionExpr(left, right), nil
