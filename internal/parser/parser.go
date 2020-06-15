@@ -116,7 +116,7 @@ func nextToken(reader tokenReader, expected types.TokenType) (nextToken types.To
 		return nextToken, errorReadFailed(err)
 	}
 	if nextToken.TokenType == types.Error {
-		return nextToken, errorReadFailedNoCause()
+		return nextToken, errorTokenizerError(nextToken)
 	}
 	if expected != nextToken.TokenType {
 		if nextToken.TokenType == types.EOF {

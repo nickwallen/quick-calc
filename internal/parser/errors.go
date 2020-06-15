@@ -66,13 +66,20 @@ func errorReadFailed(cause error) *readFailed {
 	return &readFailed{cause}
 }
 
-// errorReadFailedNoCause Creates a new read failed error where no cause is known.
-func errorReadFailedNoCause() *readFailed {
-	return &readFailed{fmt.Errorf("unknown Cause")}
+func (f *readFailed) Error() string {
+	return fmt.Sprintf("%s", f.Cause)
 }
 
-func (f *readFailed) Error() string {
-	return fmt.Sprintf("unable to read tokens, %s", f.Cause)
+type tokenizerError struct {
+	errorToken types.Token
+}
+
+func errorTokenizerError(errorToken types.Token) *tokenizerError {
+	return &tokenizerError{errorToken}
+}
+
+func (t *tokenizerError) Error() string {
+	return fmt.Sprintf("at position %d, %s", t.errorToken.Position, t.errorToken.Value)
 }
 
 // invalidUnits is an error that occurs when an invalid unit name is used.

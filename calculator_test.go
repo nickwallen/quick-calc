@@ -49,9 +49,10 @@ func TestCalculateAmount(t *testing.T) {
 }
 
 var badExpressions = map[string]string{
-	"2 miles + 3 pounds": "cannot convert from pounds to miles",
 	"32 googles":         "at position 4, 'googles' is not a known measurement unit",
 	"2 miles / 500 feet": "at position 9, got '/', but expected '+', '-', 'in'",
+	"2 miles + 3 pounds": "cannot convert from pounds to miles",
+	"pounds":             "at position 1, expected number, but got 'p'",
 }
 
 func TestCalculateBadExpr(t *testing.T) {
