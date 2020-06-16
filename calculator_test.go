@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/nickwallen/quick-calc"
 	"github.com/stretchr/testify/assert"
-	"strings"
 	"testing"
 )
 
@@ -32,6 +31,13 @@ var expressions = map[string]string{
 	"12 oz + 1.2 lbs + 24 oz - 0.8 lbs in pounds": "2.65 pounds",
 }
 
+var badExpressions = map[string]string{
+	"32 googles":         "'googles' is not a known measurement unit",
+	"2 miles / 500 feet": "got '/', but expected '+', '-', 'in'",
+	"2 miles + 3 pounds": "cannot convert from pounds to miles",
+	"pounds":             "expected number, but got 'p'",
+}
+
 func TestCalculate(t *testing.T) {
 	for expression, expected := range expressions {
 		actual, err := calc.Calculate(expression)
@@ -49,17 +55,10 @@ func TestCalculateAmount(t *testing.T) {
 	}
 }
 
-var badExpressions = map[string]string{
-	"32 googles":         "at position 4, 'googles' is not a known measurement unit",
-	"2 miles / 500 feet": "at position 9, got '/', but expected '+', '-', 'in'",
-	"2 miles + 3 pounds": "at position 13, cannot convert from pounds to miles",
-	"pounds":             "at position 1, expected number, but got 'p'",
-}
-
 func TestCalculateBadExpr(t *testing.T) {
 	for expr, expectedErr := range badExpressions {
 		_, err := calc.Calculate(expr)
 		assert.NotNil(t, err)
-		assert.Equal(t, strings.TrimLeft(expectedErr, "\n"), fmt.Sprintf("%s", err))
+		assert.Equal(t, expectedErr, fmt.Sprintf("%s", err))
 	}
 }

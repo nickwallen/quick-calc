@@ -13,7 +13,7 @@ type Amount struct {
 
 // Expression is something that can be evaluated.
 type Expression interface {
-	Eval() (Amount, error)
+	Eval() (Amount, InputError)
 }
 
 // Value represents a fixed Value like "2 pounds".
@@ -28,7 +28,7 @@ func NewValue(number float64, unit Token) Value {
 }
 
 // Eval evaluates a simple Value expression.
-func (v Value) Eval() (Amount, error) {
+func (v Value) Eval() (Amount, InputError) {
 	return Amount{
 		Value: v.number,
 		Units: v.unit,
@@ -43,17 +43,18 @@ func (v Value) String() string {
 type Addition struct {
 	left  Expression
 	right Expression
+	input string
 }
 
 // AdditionExpr creates a new expression that performs Addition.
-func AdditionExpr(left, right Expression) Addition {
-	return Addition{left, right}
+func AdditionExpr(left, right Expression, input string) Addition {
+	return Addition{left, right, input}
 }
 
 // Eval evaluates an Addition expression.
-func (s Addition) Eval() (sum Amount, err error) {
+func (s Addition) Eval() (sum Amount, err InputError) {
 	add := func(l float64, r float64) float64 { return l + r }
-	return eval(s.left, s.right, add)
+	return eval(s.left, s.right, add, s.input)
 }
 
 func (s Addition) String() string {
@@ -64,17 +65,18 @@ func (s Addition) String() string {
 type Subtraction struct {
 	left  Expression
 	right Expression
+	input string
 }
 
 // SubtractionExpr creates a new expression that performs Subtraction.
-func SubtractionExpr(left, right Expression) Subtraction {
-	return Subtraction{left, right}
+func SubtractionExpr(left, right Expression, input string) Subtraction {
+	return Subtraction{left, right, input}
 }
 
 // Eval evaluates a Subtraction expression.
-func (s Subtraction) Eval() (diff Amount, err error) {
+func (s Subtraction) Eval() (diff Amount, err InputError) {
 	subtract := func(l float64, r float64) float64 { return l - r }
-	return eval(s.left, s.right, subtract)
+	return eval(s.left, s.right, subtract, s.input)
 }
 
 func (s Subtraction) String() string {
@@ -85,15 +87,16 @@ func (s Subtraction) String() string {
 type UnitConversion struct {
 	expr        Expression
 	targetUnits Token
+	input       string
 }
 
 // UnitConversionExpr creates a new unit conversion expression.
-func UnitConversionExpr(expr Expression, targetUnits Token) UnitConversion {
-	return UnitConversion{expr, targetUnits}
+func UnitConversionExpr(expr Expression, targetUnits Token, input string) UnitConversion {
+	return UnitConversion{expr, targetUnits, input}
 }
 
 // Eval evaluates a unit conversion expression.s
-func (c UnitConversion) Eval() (amount Amount, err error) {
+func (c UnitConversion) Eval() (amount Amount, err InputError) {
 	// evaluate the expression
 	amount, err = c.expr.Eval()
 	if err != nil {
@@ -101,14 +104,14 @@ func (c UnitConversion) Eval() (amount Amount, err error) {
 	}
 	// is unit conversion needed?
 	if amount.Units.String() != c.targetUnits.Value {
-		fromUnits, err := u.Find(amount.Units.Value)
-		if err != nil {
-			return amount, err
+		fromUnits, unitErr := u.Find(amount.Units.Value)
+		if unitErr != nil {
+			return amount, ErrorInvalidUnits(c.input, amount.Units)
 		}
 
-		toUnits, err := u.Find(c.targetUnits.Value)
+		toUnits, unitErr := u.Find(c.targetUnits.Value)
 		if err != nil {
-			return amount, err
+			return amount, ErrorInvalidUnits(c.input, c.targetUnits)
 		}
 
 		if fromUnits.Name == toUnits.Name {
@@ -120,7 +123,7 @@ func (c UnitConversion) Eval() (amount Amount, err error) {
 		// unit conversion
 		value, err := u.ConvertFloat(amount.Value, fromUnits, toUnits)
 		if err != nil {
-			return amount, ErrorInvalidUnitConversion(amount.Units, c.targetUnits)
+			return amount, ErrorInvalidUnitConversion(c.input, amount.Units, c.targetUnits)
 		}
 		amount = Amount{value.Float(), c.targetUnits}
 	}
@@ -133,7 +136,7 @@ func (c UnitConversion) String() string {
 
 type opFunction func(float64, float64) float64
 
-func eval(leftExpr Expression, rightExpr Expression, opFunc opFunction) (Amount, error) {
+func eval(leftExpr Expression, rightExpr Expression, opFunc opFunction, input string) (Amount, InputError) {
 	var result Amount
 
 	// evaluate the left side
@@ -147,7 +150,7 @@ func eval(leftExpr Expression, rightExpr Expression, opFunc opFunction) (Amount,
 
 	// unit conversion, if needed
 	if left.Units != targetUnit {
-		left, err = UnitConversionExpr(leftExpr, targetUnit).Eval()
+		left, err = UnitConversionExpr(leftExpr, targetUnit, input).Eval()
 		if err != nil {
 			return result, err
 		}
@@ -161,7 +164,7 @@ func eval(leftExpr Expression, rightExpr Expression, opFunc opFunction) (Amount,
 
 	// unit conversion, if needed
 	if right.Units != targetUnit {
-		right, err = UnitConversionExpr(rightExpr, targetUnit).Eval()
+		right, err = UnitConversionExpr(rightExpr, targetUnit, input).Eval()
 		if err != nil {
 			return result, err
 		}

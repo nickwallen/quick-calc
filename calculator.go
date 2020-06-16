@@ -9,7 +9,7 @@ import (
 )
 
 // Calculate evaluates an input expression and returns the value as a string.
-func Calculate(input string) (string, error) {
+func Calculate(input string) (string, types.InputError) {
 	var result string
 	amt, err := CalculateAmount(input)
 	if err != nil {
@@ -20,8 +20,8 @@ func Calculate(input string) (string, error) {
 }
 
 // CalculateAmount evaluates an input expression and returns an Amount object.
-func CalculateAmount(input string) (amt types.Amount, err error) {
-	tokens := io.NewTokenChannel()
+func CalculateAmount(input string) (amt types.Amount, err types.InputError) {
+	tokens := io.NewTokenChannel(input)
 	go tokenizer.Tokenize(input, tokens)
 	expr, err := parser.Parse(tokens)
 	if err != nil {

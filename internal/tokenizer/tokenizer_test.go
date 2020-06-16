@@ -232,7 +232,7 @@ var testCases = map[string][]types.Token{
 
 func TestTokens(t *testing.T) {
 	for input, expected := range testCases {
-		output := io.NewTokenChannel()
+		output := io.NewTokenChannel(input)
 		go Tokenize(input, &output)
 		for _, expect := range expected {
 			actual, err := output.ReadToken()

@@ -8,7 +8,7 @@ import (
 )
 
 func TestParseValue(t *testing.T) {
-	input := io.NewTokenChannel()
+	input := io.NewTokenChannel("23 pounds")
 	go func() {
 		input.WriteToken(types.Number.Token("23"))
 		input.WriteToken(types.Units.Token("pounds"))
@@ -21,27 +21,28 @@ func TestParseValue(t *testing.T) {
 }
 
 func TestParseValueNoUnits(t *testing.T) {
-	input := io.NewTokenChannel()
+	input := io.NewTokenChannel("23")
 	go func() {
 		input.WriteToken(types.Number.TokenAt("23", 1))
 		input.WriteToken(types.EOF.TokenAt("", 2))
 	}()
 	_, err := Parse(&input)
-	assert.Equal(t, "at position 2, reached end of input, but expected a unit", err.Error())
+	assert.Equal(t, "reached end of input, but expected a unit", err.Error())
 }
 
 func TestParseValueNoNumber(t *testing.T) {
-	input := io.NewTokenChannel()
+	input := io.NewTokenChannel("pounds")
 	go func() {
 		input.WriteToken(types.Units.TokenAt("pounds", 1))
 		input.WriteToken(types.EOF.TokenAt("", 2))
 	}()
 	_, err := Parse(&input)
-	assert.Equal(t, "at position 1, got 'pounds', but expected a number", err.Error())
+	assert.Equal(t, "got 'pounds', but expected a number", err.Error())
 }
 
 func TestParseBinaryAdd(t *testing.T) {
-	input := io.NewTokenChannel()
+	expr := "23 kg + 23 pounds"
+	input := io.NewTokenChannel(expr)
 	go func() {
 		input.WriteToken(types.Number.Token("23"))
 		input.WriteToken(types.Units.Token("kg"))
@@ -53,13 +54,15 @@ func TestParseBinaryAdd(t *testing.T) {
 	actual, err := Parse(&input)
 	expected := types.AdditionExpr(
 		types.NewValue(23, types.Units.Token("kg")),
-		types.NewValue(23, types.Units.Token("pounds")))
+		types.NewValue(23, types.Units.Token("pounds")),
+		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestParseBinarySubtract(t *testing.T) {
-	input := io.NewTokenChannel()
+	expr := "23 kg - 23 pounds"
+	input := io.NewTokenChannel(expr)
 	go func() {
 		input.WriteToken(types.Number.Token("23"))
 		input.WriteToken(types.Units.Token("kg"))
@@ -71,13 +74,15 @@ func TestParseBinarySubtract(t *testing.T) {
 	actual, err := Parse(&input)
 	expected := types.SubtractionExpr(
 		types.NewValue(23, types.Units.Token("kg")),
-		types.NewValue(23, types.Units.Token("pounds")))
+		types.NewValue(23, types.Units.Token("pounds")),
+		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestParseConversion(t *testing.T) {
-	input := io.NewTokenChannel()
+	expr := "2 pounds in ounces"
+	input := io.NewTokenChannel(expr)
 	go func() {
 		input.WriteToken(types.Number.Token("2"))
 		input.WriteToken(types.Units.Token("pounds"))
@@ -88,13 +93,15 @@ func TestParseConversion(t *testing.T) {
 	actual, err := Parse(&input)
 	expected := types.UnitConversionExpr(
 		types.NewValue(2, types.Units.Token("pounds")),
-		types.Units.Token("ounces"))
+		types.Units.Token("ounces"),
+		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestParseBinarySumAndConvert(t *testing.T) {
-	input := io.NewTokenChannel()
+	expr := "2 ounces + 2 pounds in pounds"
+	input := io.NewTokenChannel(expr)
 	go func() {
 		input.WriteToken(types.Number.Token("2"))
 		input.WriteToken(types.Units.Token("ounces"))
@@ -109,14 +116,17 @@ func TestParseBinarySumAndConvert(t *testing.T) {
 	expected := types.UnitConversionExpr(
 		types.AdditionExpr(
 			types.NewValue(2, types.Units.Token("ounces")),
-			types.NewValue(2, types.Units.Token("pounds"))),
-		types.Units.Token("pounds"))
+			types.NewValue(2, types.Units.Token("pounds")),
+			expr),
+		types.Units.Token("pounds"),
+		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestParseBinarySubtractAndConvert(t *testing.T) {
-	input := io.NewTokenChannel()
+	expr := "2 pounds - 2 ounces in ounces"
+	input := io.NewTokenChannel(expr)
 	go func() {
 		input.WriteToken(types.Number.Token("2"))
 		input.WriteToken(types.Units.Token("pounds"))
@@ -131,14 +141,17 @@ func TestParseBinarySubtractAndConvert(t *testing.T) {
 	expected := types.UnitConversionExpr(
 		types.SubtractionExpr(
 			types.NewValue(2, types.Units.Token("pounds")),
-			types.NewValue(2, types.Units.Token("ounces"))),
-		types.Units.Token("ounces"))
+			types.NewValue(2, types.Units.Token("ounces")),
+			expr),
+		types.Units.Token("ounces"),
+		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestParseSum(t *testing.T) {
-	input := io.NewTokenChannel()
+	expr := "2 ounces + 3 ounces + 4 ounces"
+	input := io.NewTokenChannel(expr)
 	go func() {
 		input.WriteToken(types.Number.Token("2"))
 		input.WriteToken(types.Units.Token("ounces"))
@@ -154,14 +167,17 @@ func TestParseSum(t *testing.T) {
 	expected := types.AdditionExpr(
 		types.AdditionExpr(
 			types.NewValue(2, types.Units.Token("ounces")),
-			types.NewValue(3, types.Units.Token("ounces"))),
-		types.NewValue(4, types.Units.Token("ounces")))
+			types.NewValue(3, types.Units.Token("ounces")),
+			expr),
+		types.NewValue(4, types.Units.Token("ounces")),
+		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestParseSum2(t *testing.T) {
-	input := io.NewTokenChannel()
+	expr := "2 ounces + 3 ounces - 4 ounces + 5 ounces"
+	input := io.NewTokenChannel(expr)
 	go func() {
 		input.WriteToken(types.Number.Token("2"))
 		input.WriteToken(types.Units.Token("ounces"))
@@ -181,9 +197,12 @@ func TestParseSum2(t *testing.T) {
 		types.SubtractionExpr(
 			types.AdditionExpr(
 				types.NewValue(2, types.Units.Token("ounces")),
-				types.NewValue(3, types.Units.Token("ounces"))),
-			types.NewValue(4, types.Units.Token("ounces"))),
-		types.NewValue(5, types.Units.Token("ounces")))
+				types.NewValue(3, types.Units.Token("ounces")),
+				expr),
+			types.NewValue(4, types.Units.Token("ounces")),
+			expr),
+		types.NewValue(5, types.Units.Token("ounces")),
+		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }

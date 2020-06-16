@@ -6,7 +6,9 @@ import (
 	calc "github.com/nickwallen/quick-calc"
 	"github.com/nickwallen/quick-calc/internal/io"
 	"github.com/nickwallen/quick-calc/internal/tokenizer"
+	"github.com/nickwallen/quick-calc/internal/types"
 	"os"
+	"strings"
 )
 
 const (
@@ -25,10 +27,18 @@ type outputWriter interface {
 
 // tokenize the input string.
 func tokenize(input string, writer outputWriter) {
-	output := io.NewTokenChannel()
+	output := io.NewTokenChannel(input)
 	go tokenizer.Tokenize(input, output)
-	for token := range output {
+	for {
+		token, err := output.ReadToken()
+		if err != nil {
+			fmt.Printf("%s \n", err)
+			return
+		}
 		fmt.Fprintf(writer, "%v  ", token)
+		if token.TokenType == types.EOF {
+			break
+		}
 	}
 }
 
@@ -36,7 +46,7 @@ func tokenize(input string, writer outputWriter) {
 func calculate(input string, writer outputWriter) {
 	result, err := calc.Calculate(input)
 	if err != nil {
-		fmt.Printf("%s \n", err)
+		fmt.Fprintf(writer, "%s \n", printError(err))
 		return
 	}
 	fmt.Fprintf(writer, "%s \n", result)
@@ -57,6 +67,19 @@ func prompt(reader inputReader, writer outputWriter, mode string) {
 		// evaluate each expression
 		calculate(input, writer)
 	}
+}
+
+func printError(error types.InputError) string {
+	template := `
+error: %s at position %d
+  |
+  | %s
+  | %s
+`
+	start, width := error.Position()
+	input := strings.TrimRight(error.Input(), "\n")
+	errorMarker := strings.Repeat(" ", start-1) + strings.Repeat("^", width)
+	return fmt.Sprintf(template, error.Error(), start, input, errorMarker)
 }
 
 func main() {
