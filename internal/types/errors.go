@@ -32,6 +32,7 @@ func ErrorUnexpectedEOF(input string, lastToken Token, expected ...TokenType) *U
 		expected:  expected,
 		lastToken: lastToken,
 		position:  lastToken.Position,
+		input:     input,
 	}
 }
 

@@ -44,6 +44,12 @@ error: expected number, but got 'p' at position 1
   | pounds
   | ^
 	`,
+	"22": `
+error: reached end of input, but expected a unit at position 3
+  |
+  | 22
+  |   ^
+`,
 }
 
 func TestPrintError(t *testing.T) {
