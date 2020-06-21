@@ -34,7 +34,7 @@ type tokenWriter interface {
 // Tokenize Tokenize the input string and writes each Token to the output channel.
 func Tokenize(input string, writer tokenWriter) {
 	tok := &tokenizer{
-		state:  expectNumber, // at the start, expect a number
+		state:  start,
 		input:  input,
 		writer: writer,
 	}
@@ -160,6 +160,19 @@ func (tok *tokenizer) error(format string, args ...interface{}) stateFn {
 	tok.writer.WriteToken(token)
 	// stop the tokenizer
 	return nil
+}
+
+// start the state function that we start at.
+func start(tok *tokenizer) stateFn {
+	// numbers or units are reasonable to expect at the start
+	tok.ignoreSpaceRun()
+	next := tok.peek()
+	switch {
+	case unicode.IsLetter(next):
+		return expectUnits
+	default:
+		return expectNumber(tok)
+	}
 }
 
 // the state function expecting a number

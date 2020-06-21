@@ -39,10 +39,10 @@ error: cannot convert from pounds to miles at position 13
   |             ^^^^^^
 `,
 	"pounds": `
-error: expected number, but got 'p' at position 1
+error: got 'pounds', but expected a number at position 1
   |
   | pounds
-  | ^
+  | ^^^^^^
 	`,
 	"22": `
 error: reached end of input, but expected a unit at position 3
@@ -54,8 +54,10 @@ error: reached end of input, but expected a unit at position 3
 
 func TestPrintError(t *testing.T) {
 	for expr, expectedErr := range badExpressions {
-		writer := bytes.NewBufferString("")
-		calculate(expr, writer)
-		assert.Equal(t, strings.TrimSpace(expectedErr), strings.TrimSpace(writer.String()))
+		t.Run(expr, func(t *testing.T) {
+			writer := bytes.NewBufferString("")
+			calculate(expr, writer)
+			assert.Equal(t, strings.TrimSpace(expectedErr), strings.TrimSpace(writer.String()))
+		})
 	}
 }
