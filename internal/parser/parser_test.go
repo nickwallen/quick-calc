@@ -8,25 +8,28 @@ import (
 )
 
 func TestParseValue(t *testing.T) {
-	input := io.NewTokenChannel("23 pounds")
+	expr := "23 pounds"
+	input := io.NewTokenChannel(expr)
 	go func() {
 		input.WriteToken(types.Number.Token("23"))
 		input.WriteToken(types.Units.Token("pounds"))
 		input.WriteToken(types.EOF.Token(""))
 	}()
 	actual, err := Parse(&input)
-	expected := types.NewValue(23, types.Units.Token("pounds"))
+	expected := types.NewValue(23, types.Units.Token("pounds"), expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestParseValueNoUnits(t *testing.T) {
-	input := io.NewTokenChannel("23")
+	expr := "23"
+	input := io.NewTokenChannel(expr)
 	go func() {
 		input.WriteToken(types.Number.TokenAt("23", 1))
 		input.WriteToken(types.EOF.TokenAt("", 2))
 	}()
 	_, err := Parse(&input)
+	assert.NotNil(t, err)
 	assert.Equal(t, "reached end of input, but expected a unit", err.Error())
 }
 
@@ -37,6 +40,7 @@ func TestParseValueNoNumber(t *testing.T) {
 		input.WriteToken(types.EOF.TokenAt("", 2))
 	}()
 	_, err := Parse(&input)
+	assert.NotNil(t, err)
 	assert.Equal(t, "got 'pounds', but expected a number", err.Error())
 }
 
@@ -53,8 +57,8 @@ func TestParseBinaryAdd(t *testing.T) {
 	}()
 	actual, err := Parse(&input)
 	expected := types.AdditionExpr(
-		types.NewValue(23, types.Units.Token("kg")),
-		types.NewValue(23, types.Units.Token("pounds")),
+		types.NewValue(23, types.Units.Token("kg"), expr),
+		types.NewValue(23, types.Units.Token("pounds"), expr),
 		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
@@ -73,8 +77,8 @@ func TestParseBinarySubtract(t *testing.T) {
 	}()
 	actual, err := Parse(&input)
 	expected := types.SubtractionExpr(
-		types.NewValue(23, types.Units.Token("kg")),
-		types.NewValue(23, types.Units.Token("pounds")),
+		types.NewValue(23, types.Units.Token("kg"), expr),
+		types.NewValue(23, types.Units.Token("pounds"), expr),
 		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
@@ -92,7 +96,7 @@ func TestParseConversion(t *testing.T) {
 	}()
 	actual, err := Parse(&input)
 	expected := types.UnitConversionExpr(
-		types.NewValue(2, types.Units.Token("pounds")),
+		types.NewValue(2, types.Units.Token("pounds"), expr),
 		types.Units.Token("ounces"),
 		expr)
 	assert.Equal(t, expected, actual)
@@ -115,8 +119,8 @@ func TestParseBinarySumAndConvert(t *testing.T) {
 	actual, err := Parse(&input)
 	expected := types.UnitConversionExpr(
 		types.AdditionExpr(
-			types.NewValue(2, types.Units.Token("ounces")),
-			types.NewValue(2, types.Units.Token("pounds")),
+			types.NewValue(2, types.Units.Token("ounces"), expr),
+			types.NewValue(2, types.Units.Token("pounds"), expr),
 			expr),
 		types.Units.Token("pounds"),
 		expr)
@@ -140,8 +144,8 @@ func TestParseBinarySubtractAndConvert(t *testing.T) {
 	actual, err := Parse(&input)
 	expected := types.UnitConversionExpr(
 		types.SubtractionExpr(
-			types.NewValue(2, types.Units.Token("pounds")),
-			types.NewValue(2, types.Units.Token("ounces")),
+			types.NewValue(2, types.Units.Token("pounds"), expr),
+			types.NewValue(2, types.Units.Token("ounces"), expr),
 			expr),
 		types.Units.Token("ounces"),
 		expr)
@@ -166,10 +170,10 @@ func TestParseSum(t *testing.T) {
 	actual, err := Parse(&input)
 	expected := types.AdditionExpr(
 		types.AdditionExpr(
-			types.NewValue(2, types.Units.Token("ounces")),
-			types.NewValue(3, types.Units.Token("ounces")),
+			types.NewValue(2, types.Units.Token("ounces"), expr),
+			types.NewValue(3, types.Units.Token("ounces"), expr),
 			expr),
-		types.NewValue(4, types.Units.Token("ounces")),
+		types.NewValue(4, types.Units.Token("ounces"), expr),
 		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
@@ -196,12 +200,12 @@ func TestParseSum2(t *testing.T) {
 	expected := types.AdditionExpr(
 		types.SubtractionExpr(
 			types.AdditionExpr(
-				types.NewValue(2, types.Units.Token("ounces")),
-				types.NewValue(3, types.Units.Token("ounces")),
+				types.NewValue(2, types.Units.Token("ounces"), expr),
+				types.NewValue(3, types.Units.Token("ounces"), expr),
 				expr),
-			types.NewValue(4, types.Units.Token("ounces")),
+			types.NewValue(4, types.Units.Token("ounces"), expr),
 			expr),
-		types.NewValue(5, types.Units.Token("ounces")),
+		types.NewValue(5, types.Units.Token("ounces"), expr),
 		expr)
 	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)

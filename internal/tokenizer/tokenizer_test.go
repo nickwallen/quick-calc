@@ -228,6 +228,26 @@ var testCases = map[string][]types.Token{
 		types.Number.TokenAt("2", 7),
 		types.EOF.TokenAt("", 8),
 	},
+	" pounds": {
+		types.Units.TokenAt("pounds", 2),
+		types.EOF.TokenAt("", 8),
+	},
+	"pounds 22": {
+		types.Units.TokenAt("pounds", 1),
+		types.Number.TokenAt("22", 8),
+		types.EOF.TokenAt("", 10),
+	},
+	"22 in": {
+		types.Number.TokenAt("22", 1),
+		types.Units.TokenAt("in", 4),
+		types.EOF.TokenAt("", 6),
+	},
+	"in pounds 22": {
+		types.Units.TokenAt("in", 1), // the tokenizer assumes this is the unit 'inches', not the keyword 'in'
+		types.Units.TokenAt("pounds", 4),
+		types.Number.TokenAt("22", 11),
+		types.EOF.TokenAt("", 13),
+	},
 }
 
 func TestTokens(t *testing.T) {

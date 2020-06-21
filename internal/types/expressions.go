@@ -20,15 +20,22 @@ type Expression interface {
 type Value struct {
 	number float64
 	unit   Token
+	input  string
 }
 
 // NewValue creates a new Value.
-func NewValue(number float64, unit Token) Value {
-	return Value{number, unit}
+func NewValue(number float64, unit Token, input string) Value {
+	return Value{number, unit, input}
 }
 
 // Eval evaluates a simple Value expression.
 func (v Value) Eval() (Amount, InputError) {
+	// validate the units
+	var amount Amount
+	_, err := u.Find(v.unit.Value)
+	if err != nil {
+		return amount, ErrorInvalidUnits(v.input, v.unit)
+	}
 	return Amount{
 		Value: v.number,
 		Units: v.unit,
@@ -110,7 +117,7 @@ func (c UnitConversion) Eval() (amount Amount, err InputError) {
 		}
 
 		toUnits, unitErr := u.Find(c.targetUnits.Value)
-		if err != nil {
+		if unitErr != nil {
 			return amount, ErrorInvalidUnits(c.input, c.targetUnits)
 		}
 

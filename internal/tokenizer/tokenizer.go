@@ -49,7 +49,7 @@ func (tok *tokenizer) current() string {
 }
 
 // emits a Token to be consumed by the client
-func (tok *tokenizer) emit(tokenType types.TokenType) {
+func (tok *tokenizer) emit(tokenType types.TokenType) error {
 	var token types.Token
 	switch tokenType {
 	case types.EOF:
@@ -57,8 +57,13 @@ func (tok *tokenizer) emit(tokenType types.TokenType) {
 	default:
 		token = tokenType.TokenAt(tok.current(), tok.start+1)
 	}
-	tok.writer.WriteToken(token)
+	err := tok.writer.WriteToken(token)
+	if err != nil {
+		return err
+	}
+
 	tok.start = tok.pos
+	return nil
 }
 
 // skips over the pending input
@@ -88,9 +93,9 @@ func (tok *tokenizer) backup() {
 
 // peek returns, but does not consume the next rune in the input.
 func (tok *tokenizer) peek() rune {
-	rune := tok.next()
+	next := tok.next()
 	tok.backup()
-	return rune
+	return next
 }
 
 func (tok *tokenizer) next() rune {
@@ -157,7 +162,10 @@ func (tok *tokenizer) run() {
 func (tok *tokenizer) error(format string, args ...interface{}) stateFn {
 	msg := fmt.Sprintf(format, args...)
 	token := types.Error.TokenAt(msg, tok.start+1)
-	tok.writer.WriteToken(token)
+	err := tok.writer.WriteToken(token)
+	if err != nil {
+		panic(fmt.Sprintf("unable to write token; %s", err))
+	}
 	// stop the tokenizer
 	return nil
 }
@@ -223,7 +231,10 @@ func expectNumber(tok *tokenizer) stateFn {
 	}
 
 	// we have the number
-	tok.emit(types.Number)
+	err := tok.emit(types.Number)
+	if err != nil {
+		return tok.error("cannot emit token; %s", err)
+	}
 
 	// what is next?
 	tok.ignoreSpaceRun()
@@ -243,7 +254,10 @@ func expectEOF(tok *tokenizer) stateFn {
 	tok.ignoreSpaceRun()
 	tok.ignoreRun('\n')
 	if tok.next() == eofRune {
-		tok.emit(types.EOF)
+		err := tok.emit(types.EOF)
+		if err != nil {
+			return tok.error("cannot emit token; %s", err)
+		}
 		return nil
 	}
 	return tok.error("expected EOF, but got '%s'", tok.current())
@@ -254,16 +268,28 @@ func expectSymbol(tok *tokenizer) stateFn {
 	for {
 		switch next := tok.next(); {
 		case next == '+':
-			tok.emit(types.Plus)
+			err := tok.emit(types.Plus)
+			if err != nil {
+				return tok.error("cannot emit token; %s", err)
+			}
 			return expectNumber
 		case next == '-':
-			tok.emit(types.Minus)
+			err := tok.emit(types.Minus)
+			if err != nil {
+				return tok.error("cannot emit token; %s", err)
+			}
 			return expectNumber
 		case next == '*':
-			tok.emit(types.Multiply)
+			err := tok.emit(types.Multiply)
+			if err != nil {
+				return tok.error("cannot emit token; %s", err)
+			}
 			return expectNumber
 		case next == '/':
-			tok.emit(types.Divide)
+			err := tok.emit(types.Divide)
+			if err != nil {
+				return tok.error("cannot emit token; %s", err)
+			}
 			return expectNumber
 		case unicode.IsSpace(next):
 			tok.ignore()
@@ -284,7 +310,10 @@ func expectUnits(tok *tokenizer) stateFn {
 		tok.next()
 		return tok.error("expected units, but got '%s'", tok.current())
 	}
-	tok.emit(types.Units)
+	err := tok.emit(types.Units)
+	if err != nil {
+		return tok.error("cannot emit token; %s", err)
+	}
 
 	// what is next?
 	tok.ignoreSpaceRun()
@@ -296,6 +325,8 @@ func expectUnits(tok *tokenizer) stateFn {
 		return expectIn
 	case unicode.IsLetter(tok.peek()):
 		return expectUnits
+	case unicode.IsNumber(tok.peek()):
+		return expectNumber(tok)
 	default:
 		return expectSymbol
 	}
@@ -305,7 +336,10 @@ func expectUnits(tok *tokenizer) stateFn {
 func expectIn(tok *tokenizer) stateFn {
 	tok.ignoreSpaceRun()
 	if tok.accept("iI") && tok.accept("nN") && tok.accept(" ") {
-		tok.emit(types.In)
+		err := tok.emit(types.In)
+		if err != nil {
+			return tok.error("cannot emit token; %s", err)
+		}
 		return expectUnits
 	}
 	// error

@@ -96,7 +96,7 @@ func expectValue(reader tokenReader) (expr types.Expression, err types.InputErro
 	if err != nil {
 		return expr, err
 	}
-	expr = types.NewValue(number, units)
+	expr = types.NewValue(number, units, reader.Input())
 	return expr, nil
 }
 
