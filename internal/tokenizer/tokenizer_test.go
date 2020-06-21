@@ -232,12 +232,14 @@ var testCases = map[string][]types.Token{
 
 func TestTokens(t *testing.T) {
 	for input, expected := range testCases {
-		output := io.NewTokenChannel(input)
-		go Tokenize(input, &output)
-		for _, expect := range expected {
-			actual, err := output.ReadToken()
-			assert.Nil(t, err)
-			assert.Equal(t, expect, actual, "'%s'", input)
-		}
+		t.Run(input, func(t *testing.T) {
+			output := io.NewTokenChannel(input)
+			go Tokenize(input, &output)
+			for _, expect := range expected {
+				actual, err := output.ReadToken()
+				assert.Nil(t, err)
+				assert.Equal(t, expect, actual, "'%s'", input)
+			}
+		})
 	}
 }

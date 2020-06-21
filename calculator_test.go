@@ -39,26 +39,32 @@ var badExpressions = map[string]string{
 }
 
 func TestCalculate(t *testing.T) {
-	for expression, expected := range expressions {
-		actual, err := calc.Calculate(expression)
-		assert.Nil(t, err, expression)
-		assert.Equal(t, expected, actual, expression)
+	for input, expected := range expressions {
+		t.Run(input, func(t *testing.T) {
+			actual, err := calc.Calculate(input)
+			assert.Nil(t, err, input)
+			assert.Equal(t, expected, actual, input)
+		})
 	}
 }
 
 func TestCalculateAmount(t *testing.T) {
-	for expression, expected := range expressions {
-		actual, err := calc.CalculateAmount(expression)
-		actualStr := fmt.Sprintf("%.2f %s", actual.Value, actual.Units.Value)
-		assert.Nil(t, err)
-		assert.Equal(t, expected, actualStr)
+	for input, expected := range expressions {
+		t.Run(input, func(t *testing.T) {
+			actual, err := calc.CalculateAmount(input)
+			actualStr := fmt.Sprintf("%.2f %s", actual.Value, actual.Units.Value)
+			assert.Nil(t, err)
+			assert.Equal(t, expected, actualStr)
+		})
 	}
 }
 
 func TestCalculateBadExpr(t *testing.T) {
-	for expr, expectedErr := range badExpressions {
-		_, err := calc.Calculate(expr)
-		assert.NotNil(t, err)
-		assert.Equal(t, expectedErr, fmt.Sprintf("%s", err))
+	for input, expectedErr := range badExpressions {
+		t.Run(input, func(t *testing.T) {
+			_, err := calc.Calculate(input)
+			assert.NotNil(t, err)
+			assert.Equal(t, expectedErr, fmt.Sprintf("%s", err))
+		})
 	}
 }
