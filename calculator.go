@@ -27,5 +27,5 @@ func CalculateAmount(input string) (amt types.Amount, err types.InputError) {
 	if err != nil {
 		return amt, err
 	}
-	return expr.Eval()
+	return expr.Eval(input)
 }
